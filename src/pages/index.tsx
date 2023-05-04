@@ -26,7 +26,7 @@ export default function Home() {
 
   return (
     <>
-      <SearchBar />
+      <SearchBar className="mt-10" />
       <Record {...mockFirstTable} />
       <Record {...mockSecondTable} />
     </>

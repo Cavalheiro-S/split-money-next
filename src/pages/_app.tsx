@@ -16,7 +16,7 @@ const notoSans = Noto_Sans({
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <main className={`${notoSans.variable} ${rubik.variable} relative flex flex-col items-center justify-center gap-20 min-h-screen overflow-x-hidden font-sans bg-background py-20`}>
+    <main className={`${notoSans.variable} ${rubik.variable} relative flex flex-col items-center justify-center gap-20 min-h-screen overflow-x-hidden font-sans bg-background pb-20`}>
       <NavBar />
       <Component {...pageProps} />
     </main>
