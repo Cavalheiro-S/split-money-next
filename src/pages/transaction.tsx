@@ -1,28 +1,26 @@
+'use client'
 
 import { Record } from '@/components/Record/Record'
-import React from 'react'
+import { useTransaction } from '@/hooks/useTransaction'
+import { useEffect, useState } from 'react'
 
 export default function Transaction() {
+
+    const [error, setError] = useState<string>('')
+    const { getTransactions } = useTransaction();
     
-    const mockTable = {
-        title: "Lançamentos",
-        row: [
-            {
-                "Nome": "Ifood",
-                "Categoria": "Alimentação",
-                "Valor": "R$ 34,45"
-            },
-            {
-                "Nome": "Ifood",
-                "Categoria": "Alimentação",
-                "Valor": "R$ 34,45"
-            },
-        ]
-    }
+    useEffect(() => {
+        const loadData = async () => {
+            const { result } = await getTransactions()
+        }
+        loadData()
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return (
         <div className='flex justify-center w-2/3 min-h-screen pt-10 ml-32'>
-            <Record hasButton className='w-full h-fit' {...mockTable}/>
+            {!error && <Record hasButton className='w-full h-fit' title='Lançamentos' />}
         </div>
     )
 }

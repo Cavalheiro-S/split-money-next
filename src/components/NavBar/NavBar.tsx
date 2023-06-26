@@ -1,5 +1,5 @@
 
-import { NavBarLink, NavBarLinks } from '@/consts/NavBarLinks';
+import { NavBarLink, NavBarLinks } from '@/constants/NavBarLinks';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { twMerge } from 'tailwind-merge';

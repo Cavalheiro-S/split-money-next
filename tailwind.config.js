@@ -1,5 +1,3 @@
-const { fontFamily } = require('tailwindcss/defaultTheme')
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -9,13 +7,13 @@ module.exports = {
   ],
   theme: {
     extend: {
-      colors:{
+      colors: {
         'primary': '#00B528',
         'background': '#EEEEEE',
       },
       fontFamily: {
-        'sans': ['var(--font-noto-sans)', ...fontFamily.sans],
-        'heading': ['var(--font-rubik)', ...fontFamily.sans],
+        'sans': ['var(--font-noto-sans)'],
+        'heading': ['var(--font-rubik)'],
       }
     },
   },
