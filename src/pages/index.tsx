@@ -1,48 +1,33 @@
 'use client'
 
-import { Loading } from "@/components/Loading/Loading";
 import { Record } from "@/components/Record/Record";
 import { SearchBar } from "@/components/SearchBar/SearchBar";
-import { TransactionDTO } from "@/data/dtos/TransactionDTO";
+import { Wrapper } from "@/components/Wrapper/Wrapper";
 import { useTransaction } from "@/hooks/useTransaction";
-import { useEffect, useState } from "react";
+import { RootState } from "@/store";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
 
 export default function Home() {
-
-  const [error, setError] = useState<string>('')
-  const { getTransactions, getTransactionsByType, loading } = useTransaction();
-  const [transactions, setTransactions] = useState<TransactionDTO[]>([])
-  const [outcomes, setOutcomes] = useState<TransactionDTO[]>([])
+  const { getTransactions, getTransactionsOutcome } = useTransaction();
+  const { transactions, outcomes } = useSelector((state: RootState) => state.transactionState)
 
   useEffect(() => {
-    const loadTransactions = async () => {
-      const { result } = await getTransactions()
-      if (result?.data && Array.isArray(result.data)) {
-        setTransactions(result.data)
-      }
+    const loadData = async () => {
+      await Promise.all([
+        getTransactions(),
+        getTransactionsOutcome()
+      ])
     }
-    const loadOutcomes = async () => {
-      const { result } = await getTransactionsByType("outcome")
-      if (result?.data && Array.isArray(result.data)) {
-        setOutcomes(result.data)
-      }
-    }
-    loadTransactions()
-    loadOutcomes()
+    loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [  ])
+  }, [])
 
-  return loading ? <Loading />
-    : (
-      <>
-        <SearchBar className="mt-10" />
-        {!error &&
-          <>
-            <Record title="Últimos Lançamentos" data={transactions} />
-            <Record title="Últimas Despesas" data={outcomes} />
-          </>
-        }
-
-      </>
-    )
+  return (
+    <>
+      <SearchBar className="mt-10" />
+      <Record data={transactions} title="Últimos Lançamentos" />
+      <Record data={outcomes} title="Últimas Despesas" />
+    </>
+  )
 }
