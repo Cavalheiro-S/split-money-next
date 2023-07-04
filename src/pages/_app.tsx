@@ -1,5 +1,4 @@
 import { NavBar } from '@/components/NavBar/NavBar'
-import { Wrapper } from '@/components/Wrapper/Wrapper'
 import { store } from '@/store'
 import '@/styles/globals.css'
 import type { AppProps } from 'next/app'
@@ -25,9 +24,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <main className={`${notoSans.variable} ${rubik.variable} text-gray-800 relative flex flex-col items-center justify-center gap-20 min-h-screen overflow-x-hidden font-sans bg-background pb-20`}>
       <Provider store={store}>
         <NavBar />
-        <Wrapper>
-          <Component {...pageProps} />
-        </Wrapper>
+        <Component {...pageProps} />
         <ToastContainer />
       </Provider>
     </main>

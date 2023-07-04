@@ -1,9 +1,10 @@
 import TransactionCategoryTranslate from '@/assets/translate/TransactionCategory.json'
 import { Button } from '@/components/Button/Button'
 import { TransactionCategoryEnum } from '@/enums/TransactionCategoryEnum'
-import { useTransaction } from '@/hooks/useTransaction'
+import { AppDispatch } from '@/store'
+import { addTransactionAsync } from '@/store/features/transaction/TransactionSlice'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { toast } from 'react-toastify'
+import { useDispatch } from 'react-redux'
 
 interface Inputs {
     description: string,
@@ -14,15 +15,11 @@ interface Inputs {
 }
 
 export const RecordForm = () => {
-    const { createTransaction } = useTransaction()
+
+    const dispatch = useDispatch<AppDispatch>()
 
     const onSubmit: SubmitHandler<Inputs> = async data => {
-        const { result, error } = await createTransaction({ ...data })
-        if (error)
-            toast.error(error)
-        else if (result?.data) {
-            toast.success("Lançamento adicionado com sucesso")
-        }
+        dispatch(addTransactionAsync({ ...data }))
     }
 
     const { register, handleSubmit, formState: { errors } } = useForm<Inputs>()

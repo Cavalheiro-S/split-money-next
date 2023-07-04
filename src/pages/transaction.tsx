@@ -1,17 +1,16 @@
 'use client'
 
 import { Record } from '@/components/Record/Record'
-import { useTransaction } from '@/hooks/useTransaction'
-import { RootState } from '@/store';
+import { AppDispatch, RootState } from '@/store';
+import { setTransactionsAsync } from '@/store/features/transaction/TransactionSlice';
 import { useEffect } from 'react'
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 export default function Transaction() {
-    const { getTransactions } = useTransaction();
     const { transactions } = useSelector((state: RootState) => state.transactionState)
-
+    const dispatch = useDispatch<AppDispatch>()
     useEffect(() => {
-        const loadData = async () => await getTransactions()
+        const loadData = async () => await setTransactionsAsync()
         loadData()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])

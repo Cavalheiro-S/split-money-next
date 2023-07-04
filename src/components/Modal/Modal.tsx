@@ -1,21 +1,25 @@
 'use client'
 
-import React from 'react'
-import * as Dialog from '@radix-ui/react-dialog';
+import { AppDispatch, RootState } from '@/store';
+import { handleModalChange } from '@/store/features/modal/ModalSlice';
 import { X } from '@phosphor-icons/react';
+import * as Dialog from '@radix-ui/react-dialog';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 
 interface ModalProps {
-    open: boolean
-    setOpen: React.Dispatch<React.SetStateAction<boolean>>
     trigger: React.ReactNode
     content: React.ReactNode
     title: string
 }
 
-export const Modal = ({ open, setOpen, trigger, content, title }: ModalProps) => {
+export const Modal = ({ trigger, content, title }: ModalProps) => {
+    const { isOpen } = useSelector((state: RootState) => state.modalState)
+    const dispatch = useDispatch<AppDispatch>()
+
     return (
-        <Dialog.Root open={open} onOpenChange={setOpen}>
+        <Dialog.Root open={isOpen} onOpenChange={() => dispatch(handleModalChange())}>
             <Dialog.Trigger asChild>
                 {trigger}
             </Dialog.Trigger>
@@ -24,7 +28,7 @@ export const Modal = ({ open, setOpen, trigger, content, title }: ModalProps) =>
                 <div className='flex justify-between mb-6'>
                     <h4 className='text-gray-800 w-fit'>{title}</h4>
                     <Dialog.Close>
-                        <X className='w-6 h-6 text-gray-500'/>
+                        <X className='w-6 h-6 text-gray-500' />
                     </Dialog.Close>
                 </div>
                 {content}

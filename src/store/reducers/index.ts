@@ -1,8 +1,8 @@
 import { combineReducers } from "redux";
-import ServiceApiReducer from "../features/service-api/ServiceApiSlice";
 import TransactionReducer from "../features/transaction/TransactionSlice";
+import ModalReducer from "../features/modal/ModalSlice";
 
 export const Reducers = combineReducers({
     transactionState: TransactionReducer,
-    serviceApiState: ServiceApiReducer
+    modalState: ModalReducer
 })

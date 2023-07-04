@@ -1,29 +1,29 @@
 'use client'
 
+import { Loading } from "@/components/Loading/Loading";
 import { Record } from "@/components/Record/Record";
 import { SearchBar } from "@/components/SearchBar/SearchBar";
-import { Wrapper } from "@/components/Wrapper/Wrapper";
-import { useTransaction } from "@/hooks/useTransaction";
-import { RootState } from "@/store";
+// import { useTransaction } from "@/hooks/useTransaction";
+import { AppDispatch, RootState } from "@/store";
+import { setTransactionsAsync, setOutcomesAsync } from "@/store/features/transaction/TransactionSlice";
 import { useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function Home() {
-  const { getTransactions, getTransactionsOutcome } = useTransaction();
-  const { transactions, outcomes } = useSelector((state: RootState) => state.transactionState)
+  // const { getTransactionsOutcome } = useTransaction();
+  const dispatch = useDispatch<AppDispatch>()
+  const { transactions, outcomes, isLoading } = useSelector((state: RootState) => state.transactionState)
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([
-        getTransactions(),
-        getTransactionsOutcome()
-      ])
+      dispatch(setTransactionsAsync())
+      dispatch(setOutcomesAsync())
     }
     loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  return (
+  return isLoading ? <Loading/> : (
     <>
       <SearchBar className="mt-10" />
       <Record data={transactions} title="Últimos Lançamentos" />
