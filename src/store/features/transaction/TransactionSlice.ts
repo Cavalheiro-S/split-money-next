@@ -1,17 +1,9 @@
 import { api } from "@/data/axios";
 import { ApiBaseDTO } from "@/data/dtos/ApiBaseDTO";
 import { TransactionDTO } from "@/data/dtos/TransactionDTO";
-import { verifyErrorType } from "@/utils";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import { closeModal } from "../modal/ModalSlice";
-
-interface TransactionState {
-    transactionActive: TransactionDTO
-    transactions: TransactionDTO[]
-    incomes: TransactionDTO[]
-    outcomes: TransactionDTO[]
-}
 
 export const setTransactionsAsync = createAsyncThunk(
     'transaction/setTransactionsAsync',
@@ -22,9 +14,6 @@ export const setTransactionsAsync = createAsyncThunk(
         }
         catch (error) {
             return thunkAPI.rejectWithValue({ error })
-        }
-        finally{
-            thunkAPI.dispatch(closeModal(null))
         }
     }
 )
@@ -38,9 +27,6 @@ export const addTransactionAsync = createAsyncThunk(
         }
         catch (error) {
             return thunkAPI.rejectWithValue({ error })
-        }
-        finally{
-            thunkAPI.dispatch(closeModal(null))
         }
     }
 )
@@ -62,11 +48,14 @@ export const updateTransactionAsync = createAsyncThunk(
     'transaction/updateTransactionAsync',
     async (transaction: TransactionDTO, thunkAPI) => {
         try {
-            const response = await api.put<ApiBaseDTO<TransactionDTO>>(`/transaction/${transaction.id}`, transaction)
+            const response = await api.patch<ApiBaseDTO<TransactionDTO>>(`/transaction/${transaction.id}`, transaction)
             return response.data.data
         }
         catch (error) {
             return thunkAPI.rejectWithValue({ error })
+        }
+        finally{
+            thunkAPI.dispatch(closeModal())
         }
     }
 )
@@ -120,7 +109,14 @@ export const transactionSlice = createSlice({
         outcomes: [] as TransactionDTO[],
         isLoading: false
     },
-    reducers: {},
+    reducers: {
+        cleanTransactionActive: (state) => {
+            state.transactionActive = {} as TransactionDTO
+        },
+        setTransactionActive: (state, action) => {
+            state.transactionActive = action.payload
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(setTransactionsAsync.fulfilled, (state, action) => {
@@ -173,5 +169,6 @@ export const transactionSlice = createSlice({
     }
 })
 
+export const { setTransactionActive, cleanTransactionActive } = transactionSlice.actions
 
 export default transactionSlice.reducer

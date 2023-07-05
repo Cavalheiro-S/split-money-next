@@ -1,28 +1,55 @@
 import TransactionCategoryTranslate from '@/assets/translate/TransactionCategory.json'
 import { Button } from '@/components/Button/Button'
 import { TransactionCategoryEnum } from '@/enums/TransactionCategoryEnum'
-import { AppDispatch } from '@/store'
-import { addTransactionAsync } from '@/store/features/transaction/TransactionSlice'
+import { AppDispatch, RootState } from '@/store'
+import { closeModal } from '@/store/features/modal/ModalSlice'
+import { addTransactionAsync, cleanTransactionActive, updateTransactionAsync } from '@/store/features/transaction/TransactionSlice'
+import { capitalizeFirstLetter } from '@/utils'
+import moment from 'moment'
+import { useEffect, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 interface Inputs {
     description: string,
     amount: number,
     date: string,
-    type: string,
+    type: "income" | "outcome",
     category: string
 }
 
 export const RecordForm = () => {
 
+    const [newTransaction, setNewTransaction] = useState(false)
+    const { register, handleSubmit, formState: { errors }, setValue } = useForm<Inputs>()
+    const { transactionActive } = useSelector((state: RootState) => state.transactionState)
     const dispatch = useDispatch<AppDispatch>()
 
+    useEffect(() => {
+        if (transactionActive.id) {
+            const { description, amount, date, type, category } = transactionActive
+            setValue('description', description)
+            setValue('amount', amount)
+            setValue('date', moment(date).format('YYYY-MM-DD'))
+            setValue('type', type)
+            setValue('category', capitalizeFirstLetter(category))
+            setNewTransaction(false)
+        }   
+        else
+            setNewTransaction(true)
+    }, [transactionActive, setValue])
+
     const onSubmit: SubmitHandler<Inputs> = async data => {
-        dispatch(addTransactionAsync({ ...data }))
+        if (transactionActive.id) {
+            const { id } = transactionActive
+            dispatch(updateTransactionAsync({ ...data, id }))
+        }
+        else
+            dispatch(addTransactionAsync({ ...data }))
+        dispatch(closeModal())
+        dispatch(cleanTransactionActive())
     }
 
-    const { register, handleSubmit, formState: { errors } } = useForm<Inputs>()
 
     const renderCategories = () => {
         const categories = Object.values(TransactionCategoryEnum)
@@ -44,7 +71,7 @@ export const RecordForm = () => {
             </label>
             <label className='flex flex-col gap-1 text-sm'>
                 Data
-                <input defaultValue={new Date().toString()} {...register("date")} placeholder='Data' className='px-2 py-2 bg-gray-200 rounded outline-none' type="date" />
+                <input defaultValue={moment().format("YYYY-MM-DD")} {...register("date")} type="date" className='px-2 py-2 bg-gray-200 rounded outline-none' />
             </label>
             <label className='flex flex-col gap-1 text-sm'>
                 Valor
@@ -65,6 +92,6 @@ export const RecordForm = () => {
                 </select>
                 {errors.category && <span className='text-red-500'>Categoria é obrigatória</span>}
             </label>
-            <Button>Adicionar</Button>
+            <Button>{newTransaction ? "Adicionar" : "Atualizar"}</Button>
         </form>)
 }

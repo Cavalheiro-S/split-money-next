@@ -1,7 +1,8 @@
 'use client'
 
 import { AppDispatch, RootState } from '@/store';
-import { handleModalChange } from '@/store/features/modal/ModalSlice';
+import { cleanTransactionActive } from '@/store/features/transaction/TransactionSlice';
+import { closeModal, handleModalChange, openModal } from '@/store/features/modal/ModalSlice';
 import { X } from '@phosphor-icons/react';
 import * as Dialog from '@radix-ui/react-dialog';
 import React from 'react';
@@ -18,8 +19,18 @@ export const Modal = ({ trigger, content, title }: ModalProps) => {
     const { isOpen } = useSelector((state: RootState) => state.modalState)
     const dispatch = useDispatch<AppDispatch>()
 
+    const handleModal = () => {
+        if (!isOpen) {
+            dispatch(openModal(null))
+        }
+        else {
+            dispatch(closeModal(null))
+            dispatch(cleanTransactionActive())
+        }
+    }
+
     return (
-        <Dialog.Root open={isOpen} onOpenChange={() => dispatch(handleModalChange())}>
+        <Dialog.Root open={isOpen} onOpenChange={handleModal}>
             <Dialog.Trigger asChild>
                 {trigger}
             </Dialog.Trigger>

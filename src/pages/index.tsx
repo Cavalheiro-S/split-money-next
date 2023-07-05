@@ -26,8 +26,8 @@ export default function Home() {
   return isLoading ? <Loading/> : (
     <>
       <SearchBar className="mt-10" />
-      <Record data={transactions} title="Últimos Lançamentos" />
-      <Record data={outcomes} title="Últimas Despesas" />
+      <Record.Root data={transactions} title="Últimos Lançamentos" />
+      <Record.Root data={outcomes} title="Últimas Despesas" />
     </>
   )
 }
