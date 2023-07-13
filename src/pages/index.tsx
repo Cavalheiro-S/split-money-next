@@ -3,14 +3,12 @@
 import { Loading } from "@/components/Loading/Loading";
 import { Record } from "@/components/Record/Record";
 import { SearchBar } from "@/components/SearchBar/SearchBar";
-// import { useTransaction } from "@/hooks/useTransaction";
 import { AppDispatch, RootState } from "@/store";
 import { setTransactionsAsync, setOutcomesAsync } from "@/store/features/transaction/TransactionSlice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-export default function Home() {
-  // const { getTransactionsOutcome } = useTransaction();
+export default function Page() {
   const dispatch = useDispatch<AppDispatch>()
   const { transactions, outcomes, isLoading } = useSelector((state: RootState) => state.transactionState)
 
@@ -20,10 +18,9 @@ export default function Home() {
       dispatch(setOutcomesAsync())
     }
     loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [dispatch])
 
-  return isLoading ? <Loading/> : (
+  return isLoading ? <Loading /> : (
     <>
       <SearchBar className="mt-10" />
       <Record.Root data={transactions} title="Últimos Lançamentos" />

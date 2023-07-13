@@ -6,6 +6,7 @@ import { Noto_Sans, Rubik } from 'next/font/google'
 import { Provider } from 'react-redux'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { SessionProvider } from 'next-auth/react'
 
 const rubik = Rubik({
   subsets: ['latin'],
@@ -18,15 +19,17 @@ const notoSans = Noto_Sans({
   variable: '--font-noto-sans'
 })
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
 
   return (
     <main className={`${notoSans.variable} ${rubik.variable} text-gray-800 relative flex flex-col items-center justify-center gap-20 min-h-screen overflow-x-hidden font-sans bg-background pb-20`}>
-      <Provider store={store}>
-        <NavBar />
-        <Component {...pageProps} />
-        <ToastContainer />
-      </Provider>
+      <SessionProvider session={session}>
+        <Provider store={store}>
+          <NavBar />
+          <Component {...pageProps} />
+          <ToastContainer />
+        </Provider>
+      </SessionProvider>
     </main>
   )
 }

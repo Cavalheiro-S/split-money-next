@@ -12,8 +12,7 @@ export default function Transaction() {
 
     useEffect(() => {
         dispatch(setTransactionsAsync())
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [dispatch])
 
     return (
         <div className='flex justify-center w-2/3 min-h-screen pt-10 ml-32'>

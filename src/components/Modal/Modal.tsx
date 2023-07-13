@@ -21,10 +21,10 @@ export const Modal = ({ trigger, content, title }: ModalProps) => {
 
     const handleModal = () => {
         if (!isOpen) {
-            dispatch(openModal(null))
+            dispatch(openModal())
         }
         else {
-            dispatch(closeModal(null))
+            dispatch(closeModal())
             dispatch(cleanTransactionActive())
         }
     }
