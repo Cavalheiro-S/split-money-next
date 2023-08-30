@@ -1,5 +1,6 @@
 import { api } from '@/data/axios';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import dayjs from 'dayjs';
 
 interface UserSignup {
     name: string,
@@ -21,6 +22,7 @@ export const signInAsync = createAsyncThunk(
             if (!response.data.data)
                 throw new Error()
             localStorage.setItem('token', response.data.data.access_token);
+            localStorage.setItem('expiresAt', dayjs(response.data.data.expiresIn).toString());
             const config = {
                 headers: {
                     Authorization: `Bearer ${response.data.data.access_token}`,
@@ -40,14 +42,14 @@ export const signUpUserAsync = createAsyncThunk(
     'user/signUpUserAsync',
     async (action: UserSignup, thunkApi) => {
         try {
-            const body = {
+            const user = {
                 name: action.name,
                 email: action.email,
                 password: action.password,
                 balance: 0,
                 loginMethod: 'email'
             }
-            const response = await api.post<ApiBase<User>>('/user', body)
+            const response = await api.post<ApiBase<User>>('/user', user)
             return response.data.data
         }
         catch (error) {

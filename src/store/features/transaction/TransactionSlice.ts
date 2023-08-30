@@ -88,7 +88,8 @@ export const deleteTransactionAsync = createAsyncThunk(
                     Authorization: `Bearer ${token}`,
                 },
             }
-            return api.delete<ApiBase<Transaction>>(`/transaction/${id}`, config)
+            api.delete<ApiBase<Transaction>>(`/transaction/${id}`, config)
+            return id;
         }, thunkAPI)
 )
 
@@ -169,8 +170,8 @@ export const transactionSlice = createSlice({
                 toast.success('Transação atualizada com sucesso!')
             })
             .addCase(deleteTransactionAsync.fulfilled, (state, action) => {
-                const transactionPayload = action.payload as Transaction
-                const index = state.transactions.findIndex(transaction => transaction.id === transactionPayload.id)
+                const id = action.payload as string
+                const index = state.transactions.findIndex(transaction => transaction.id === id)
                 state.transactions.splice(index, 1)
                 toast.success('Transação deletada com sucesso!')
             })
@@ -191,6 +192,7 @@ export const transactionSlice = createSlice({
             .addMatcher(action => action.type.endsWith('/rejected'), (state, action) => {
                 state.isLoading = false
                 toast.error("Falha ao realizar a operação, tente novamente mais tarde!")
+                
             })
     }
 })

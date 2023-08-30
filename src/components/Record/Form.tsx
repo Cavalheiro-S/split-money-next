@@ -4,13 +4,13 @@ import { TransactionCategoryEnum } from '@/enums/TransactionCategoryEnum'
 import { AppDispatch, RootState } from '@/store'
 import { closeModal } from '@/store/features/modal/ModalSlice'
 import { addTransactionAsync, cleanTransactionActive, updateTransactionAsync } from '@/store/features/transaction/TransactionSlice'
-import { capitalizeFirstLetter } from '@/utils'
+import { capitalizeFirstLetter, formatInputMoney } from '@/utils'
 import moment from 'moment'
 import { useEffect, useState } from 'react'
 import { Controller, SubmitHandler, useForm } from 'react-hook-form'
 import { useDispatch, useSelector } from 'react-redux'
 import { Input } from '../Input/Input'
-
+import { Input as InputAnt } from 'antd'
 interface Inputs {
     description: string,
     amount: number,
@@ -31,7 +31,7 @@ export const RecordForm = () => {
             const { description, amount, date, type, category } = transactionState.transactionActive
 
             setValue('description', description)
-            setValue('amount', amount)
+            setValue('amount', Number(amount))
             setValue('date', moment(date).format('YYYY-MM-DD'))
             setValue('type', type)
             setValue('category', capitalizeFirstLetter(category))
@@ -44,11 +44,11 @@ export const RecordForm = () => {
     const onSubmit: SubmitHandler<Inputs> = async data => {
         const { id } = transactionState.transactionActive
         if (id) {
-            dispatch(updateTransactionAsync({ ...data, id }))
+            dispatch(updateTransactionAsync({ ...data, id, userId: userState.user.id }))
         }
         else {
             const transaction: Transaction = {
-                amount: data.amount,
+                amount: Number(data.amount),
                 category: data.category,
                 date: data.date,
                 description: data.description,
@@ -88,14 +88,12 @@ export const RecordForm = () => {
             </label>
             <label className='flex flex-col gap-1 text-sm'>
                 Valor
-                <Input.Root>
-                    <Controller name="amount"
-                        control={control}
-                        render={props => {
-                            return <Input.Money {...props.field} />
-                        }} />
-                    {errors.amount && <span className='text-red-500'>Valor deve ser maior que 0</span>}
-                </Input.Root>
+                <Controller name="amount"
+                    control={control}
+                    render={props => {
+                        return <InputAnt size='large' addonBefore="R$" type='number' {...props.field} />
+                    }} />
+                {errors.amount && <span className='text-red-500'>Valor deve ser maior que 0</span>}
             </label>
             <label className='flex flex-col gap-1 text-sm'>
                 Tipo

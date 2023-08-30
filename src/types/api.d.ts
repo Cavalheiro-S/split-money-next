@@ -15,10 +15,11 @@ interface User {
 }
 
 interface Transaction {
-    id?: number,
+    id?: string,
     amount: number,
     category: string,
     date: string,
     description: string,
     type: "income" | "outcome",
+    userId?: string
 }
