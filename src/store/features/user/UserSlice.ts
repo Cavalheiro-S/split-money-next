@@ -1,28 +1,34 @@
-
 import { api } from '@/data/axios';
-import { ApiBaseDTO } from '@/data/dtos/ApiBaseDTO';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { useRouter } from 'next/router';
 
-interface UserDTO {
-    id?: string,
-    name?: string,
+interface UserSignup {
+    name: string,
     email: string,
-    password?: string,
-    balance: number,
+    password: string,
 }
 
 const initialState = {
-    user: {} as UserDTO,
+    user: {} as User,
     loading: false,
 };
 
-export const signinAsync = createAsyncThunk(
-    'user/signinAsync',
+export const signInAsync = createAsyncThunk(
+    'user/signInAsync',
     async (action: { email: string, password: string }, thunkApi) => {
         try {
-            console.log("Logado");
-            
+            const response = await api.post<ApiBase<{ access_token: string, expiresIn: number }>>("/auth/login",
+                { email: action.email, password: action.password })
+            if (!response.data.data)
+                throw new Error()
+            localStorage.setItem('token', response.data.data.access_token);
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${response.data.data.access_token}`,
+                }
+            }
+            const responseUser = await api.post<ApiBase<User>>("/user/getByEmail", { email: action.email }, config)
+
+            return responseUser.data.data
         }
         catch (error) {
             return thunkApi.rejectWithValue({ error })
@@ -30,13 +36,18 @@ export const signinAsync = createAsyncThunk(
     }
 )
 
-export const createUserAsync = createAsyncThunk(
-    'user/createUserAsync',
-    async (action: { name: string, email: string, password: string }, thunkApi) => {
+export const signUpUserAsync = createAsyncThunk(
+    'user/signUpUserAsync',
+    async (action: UserSignup, thunkApi) => {
         try {
-            console.log("createUserAsync");
-            
-            const response = await api.post<ApiBaseDTO<UserDTO>>('/user', { ...action, balance: 0 })
+            const body = {
+                name: action.name,
+                email: action.email,
+                password: action.password,
+                balance: 0,
+                loginMethod: 'email'
+            }
+            const response = await api.post<ApiBase<User>>('/user', body)
             return response.data.data
         }
         catch (error) {
@@ -45,11 +56,11 @@ export const createUserAsync = createAsyncThunk(
     }
 )
 
-export const signoutAsync = createAsyncThunk(
-    'user/signoutAsync',
+export const signOutAsync = createAsyncThunk(
+    'user/signOutAsync',
     async (_, thunkApi) => {
         try {
-
+            localStorage.removeItem('token');
         }
         catch (error) {
             return thunkApi.rejectWithValue({ error })
@@ -63,16 +74,14 @@ const userSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(createUserAsync.fulfilled, (state, action) => {
-                state.user = action.payload as UserDTO;
-                state.loading = false;
+            .addCase(signUpUserAsync.fulfilled, (state, action) => {
+                state.user = action.payload as User;
             })
-            .addCase(signoutAsync.fulfilled, (state) => {
-                state.user = {} as UserDTO;
-                state.loading = false;
+            .addCase(signOutAsync.fulfilled, (state) => {
+                state.user = {} as User;
             })
-            .addCase(signinAsync.fulfilled, (state, action) => {
-                state.loading = false;
+            .addCase(signInAsync.fulfilled, (state, action) => {
+                state.user = action.payload as User;
             })
             .addMatcher(
                 (action) => {
@@ -89,7 +98,15 @@ const userSlice = createSlice({
                 , (state) => {
                     state.loading = false;
                     console.log('rejected');
-                    
+
+                }
+            )
+            .addMatcher(
+                (action) => {
+                    return action.type.endsWith('fulfilled')
+                }
+                , (state) => {
+                    state.loading = false;
                 }
             )
     }

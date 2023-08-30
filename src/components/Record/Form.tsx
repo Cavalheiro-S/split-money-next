@@ -7,8 +7,9 @@ import { addTransactionAsync, cleanTransactionActive, updateTransactionAsync } f
 import { capitalizeFirstLetter } from '@/utils'
 import moment from 'moment'
 import { useEffect, useState } from 'react'
-import { SubmitHandler, useForm } from 'react-hook-form'
+import { Controller, SubmitHandler, useForm } from 'react-hook-form'
 import { useDispatch, useSelector } from 'react-redux'
+import { Input } from '../Input/Input'
 
 interface Inputs {
     description: string,
@@ -20,32 +21,41 @@ interface Inputs {
 
 export const RecordForm = () => {
 
-    const [newTransaction, setNewTransaction] = useState(false)
-    const { register, handleSubmit, formState: { errors }, setValue } = useForm<Inputs>()
-    const { transactionActive } = useSelector((state: RootState) => state.transactionState)
+    const [isNewTransaction, setIsNewTransaction] = useState(false)
+    const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<Inputs>()
+    const { transactionState, userState } = useSelector((state: RootState) => state)
     const dispatch = useDispatch<AppDispatch>()
 
     useEffect(() => {
-        if (transactionActive.id) {
-            const { description, amount, date, type, category } = transactionActive
+        if (transactionState.transactionActive.id) {
+            const { description, amount, date, type, category } = transactionState.transactionActive
+
             setValue('description', description)
             setValue('amount', amount)
             setValue('date', moment(date).format('YYYY-MM-DD'))
             setValue('type', type)
             setValue('category', capitalizeFirstLetter(category))
-            setNewTransaction(false)
-        }   
-        else
-            setNewTransaction(true)
-    }, [transactionActive, setValue])
-
-    const onSubmit: SubmitHandler<Inputs> = async data => {
-        if (transactionActive.id) {
-            const { id } = transactionActive
-            dispatch(updateTransactionAsync({ ...data, id }))
+            setIsNewTransaction(false)
         }
         else
-            dispatch(addTransactionAsync({ ...data }))
+            setIsNewTransaction(true)
+    }, [transactionState.transactionActive, setValue])
+
+    const onSubmit: SubmitHandler<Inputs> = async data => {
+        const { id } = transactionState.transactionActive
+        if (id) {
+            dispatch(updateTransactionAsync({ ...data, id }))
+        }
+        else {
+            const transaction: Transaction = {
+                amount: data.amount,
+                category: data.category,
+                date: data.date,
+                description: data.description,
+                type: data.type
+            }
+            dispatch(addTransactionAsync({ transaction, userId: userState.user.id }))
+        }
         dispatch(closeModal())
         dispatch(cleanTransactionActive())
     }
@@ -65,18 +75,27 @@ export const RecordForm = () => {
         <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-6 text-gray-800 w-80'>
             <label className='flex flex-col gap-1 text-sm '>
                 Descrição
-                {/* Criar componente estilizado para input */}
-                <input {...register("description", { required: true, minLength: 3, maxLength: 50 })} placeholder='Descrição' className='px-2 py-2 bg-gray-200 rounded outline-none' type="text" />
+                <Input.Root>
+                    <Input.Input {...register("description", { required: true, minLength: 3, maxLength: 50 })} placeholder='Descrição' type="text" />
+                </Input.Root>
                 {errors.description && <span className='text-red-500'>Descrição deve ter entre 3 e 50 caracteres</span>}
             </label>
             <label className='flex flex-col gap-1 text-sm'>
                 Data
-                <input defaultValue={moment().format("YYYY-MM-DD")} {...register("date")} type="date" className='px-2 py-2 bg-gray-200 rounded outline-none' />
+                <Input.Root>
+                    <Input.Input defaultValue={moment().format("YYYY-MM-DD")} {...register("date")} type="date" />
+                </Input.Root>
             </label>
             <label className='flex flex-col gap-1 text-sm'>
                 Valor
-                <input {...register("amount", { min: 0, required: true })} placeholder='R$' min={0} className='px-2 py-2 bg-gray-200 rounded outline-none' type="number" />
-                {errors.amount && <span className='text-red-500'>Valor deve ser maior que 0</span>}
+                <Input.Root>
+                    <Controller name="amount"
+                        control={control}
+                        render={props => {
+                            return <Input.Money {...props.field} />
+                        }} />
+                    {errors.amount && <span className='text-red-500'>Valor deve ser maior que 0</span>}
+                </Input.Root>
             </label>
             <label className='flex flex-col gap-1 text-sm'>
                 Tipo
@@ -92,6 +111,6 @@ export const RecordForm = () => {
                 </select>
                 {errors.category && <span className='text-red-500'>Categoria é obrigatória</span>}
             </label>
-            <Button>{newTransaction ? "Adicionar" : "Atualizar"}</Button>
+            <Button>{isNewTransaction ? "Adicionar" : "Atualizar"}</Button>
         </form>)
 }

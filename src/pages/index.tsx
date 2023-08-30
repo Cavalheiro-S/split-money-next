@@ -4,27 +4,28 @@ import { Loading } from "@/components/Loading/Loading";
 import { Record } from "@/components/Record/Record";
 import { SearchBar } from "@/components/SearchBar/SearchBar";
 import { AppDispatch, RootState } from "@/store";
-import { setTransactionsAsync, setOutcomesAsync } from "@/store/features/transaction/TransactionSlice";
+import { setOutcomesAsync, setTransactionsAsync } from "@/store/features/transaction/TransactionSlice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Page() {
   const dispatch = useDispatch<AppDispatch>()
-  const { transactions, outcomes, isLoading } = useSelector((state: RootState) => state.transactionState)
-
+  const { transactionState, userState } = useSelector((state: RootState) => state)
+  
   useEffect(() => {
     const loadData = async () => {
-      dispatch(setTransactionsAsync())
-      dispatch(setOutcomesAsync())
+      if (!userState.user?.id) return
+      dispatch(setTransactionsAsync(userState.user.id))
+      dispatch(setOutcomesAsync(userState.user.id))
     }
     loadData()
-  }, [dispatch])
+  }, [dispatch, userState.user?.id])
 
-  return isLoading ? <Loading /> : (
+  return transactionState.isLoading ? <Loading /> : (
     <>
       <SearchBar className="mt-10" />
-      <Record.Root data={transactions} title="Últimos Lançamentos" />
-      <Record.Root data={outcomes} title="Últimas Despesas" />
+      <Record.Root data={transactionState.transactions} title="Últimos Lançamentos" />
+      <Record.Root data={transactionState.outcomes} title="Últimas Despesas" />
     </>
   )
 }

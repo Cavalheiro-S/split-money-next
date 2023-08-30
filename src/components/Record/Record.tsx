@@ -1,5 +1,4 @@
 import { RecordModal } from "./Modal"
-import { TransactionDTO } from '@/data/dtos/TransactionDTO'
 import { AppDispatch } from '@/store'
 import { openModal } from '@/store/features/modal/ModalSlice'
 import { deleteTransactionAsync, setTransactionActive } from '@/store/features/transaction/TransactionSlice'
@@ -13,7 +12,7 @@ import { twMerge } from 'tailwind-merge'
 
 interface RecordProps {
   title: string,
-  data: TransactionDTO[],
+  data: Transaction[],
   children?: React.ReactNode,
   hasActions?: boolean,
   className?: string,
@@ -31,7 +30,7 @@ export const RecordRoot = ({ title, className, data, children, hasActions }: Rec
 
   const handleDelete = async (id: string) => dispatch(deleteTransactionAsync(id))
 
-  const handleEdit = async (transaction: TransactionDTO) => {
+  const handleEdit = async (transaction: Transaction) => {
     if (transaction.id) {
       dispatch(setTransactionActive(transaction))
       dispatch(openModal())
