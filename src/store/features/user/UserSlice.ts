@@ -1,6 +1,7 @@
 import { api } from '@/data/axios';
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import dayjs from 'dayjs';
+import Cookies from "js-cookie"
 
 interface UserSignup {
     name: string,
@@ -11,7 +12,33 @@ interface UserSignup {
 const initialState = {
     user: {} as User,
     loading: false,
+    isAuthenticated: false,
 };
+
+export const getUserByEmail = createAsyncThunk(
+    'user/getUserByEmail',
+    async (action: { email: string }, thunkAPI) => {
+        try {
+            const tokenValue = Cookies.get("split.money.token");
+            const tokenExpiresAtValue = Cookies.get("split.money.expiresAt")
+            const tokenExpiresAt = dayjs(tokenExpiresAtValue).unix();
+            if (!tokenValue || dayjs(dayjs().unix()).isAfter(tokenExpiresAt)) {
+                thunkAPI.dispatch(setUserIsAuthenticated(false))
+                throw new Error("Token not valid")
+            }
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${Cookies.get("split.money.token")}`,
+                }
+            }
+            const responseUser = await api.post<ApiBase<User>>("/user/getByEmail", { email: action.email }, config)
+            return responseUser.data.data
+        }
+        catch (error) {
+            thunkAPI.rejectWithValue(error);
+        }
+    }
+)
 
 export const signInAsync = createAsyncThunk(
     'user/signInAsync',
@@ -21,16 +48,11 @@ export const signInAsync = createAsyncThunk(
                 { email: action.email, password: action.password })
             if (!response.data.data)
                 throw new Error()
-            localStorage.setItem('token', response.data.data.access_token);
-            localStorage.setItem('expiresAt', dayjs(response.data.data.expiresIn).toString());
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${response.data.data.access_token}`,
-                }
-            }
-            const responseUser = await api.post<ApiBase<User>>("/user/getByEmail", { email: action.email }, config)
 
-            return responseUser.data.data
+            Cookies.set('split.money.token', response.data.data.access_token, { expires: 7 });
+            const date = dayjs(response.data.data.expiresIn * 1000);
+            Cookies.set('split.money.expiresAt', date.toISOString(), { expires: 7 });
+            return response.data.data
         }
         catch (error) {
             return thunkApi.rejectWithValue({ error })
@@ -62,7 +84,9 @@ export const signOutAsync = createAsyncThunk(
     'user/signOutAsync',
     async (_, thunkApi) => {
         try {
-            localStorage.removeItem('token');
+
+            Cookies.remove('split.money.token');
+            Cookies.remove('split.money.expiresAt')
         }
         catch (error) {
             return thunkApi.rejectWithValue({ error })
@@ -73,7 +97,9 @@ export const signOutAsync = createAsyncThunk(
 const userSlice = createSlice({
     name: 'user',
     initialState,
-    reducers: {},
+    reducers: {
+        setUserIsAuthenticated: (state, action: PayloadAction<boolean>) => { state.isAuthenticated = action.payload }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(signUpUserAsync.fulfilled, (state, action) => {
@@ -82,7 +108,7 @@ const userSlice = createSlice({
             .addCase(signOutAsync.fulfilled, (state) => {
                 state.user = {} as User;
             })
-            .addCase(signInAsync.fulfilled, (state, action) => {
+            .addCase(getUserByEmail.fulfilled, (state, action) => {
                 state.user = action.payload as User;
             })
             .addMatcher(
@@ -114,6 +140,6 @@ const userSlice = createSlice({
     }
 });
 
-export const { } = userSlice.actions;
+export const { setUserIsAuthenticated } = userSlice.actions;
 
 export default userSlice.reducer;

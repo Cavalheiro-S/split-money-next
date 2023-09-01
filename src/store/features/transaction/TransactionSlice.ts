@@ -1,134 +1,101 @@
 import { api } from "@/data/axios";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { AxiosRequestConfig } from "axios";
 import { toast } from "react-toastify";
 import { closeModal } from "../modal/ModalSlice";
-import { AxiosRequestConfig } from "axios";
+import Cookies from "js-cookie";
+import dayjs from "dayjs";
 
 type TransactionWithUserId = {
     transaction: Transaction
     userId: string,
 }
 
-export const execute = async (callbackAction: Function, thunkAPI: any, callbackFinally?: Function) => {
+export const execute = async (url: string, method: "POST" | "PATCH" | "DELETE" | "GET", thunkAPI: any, data?: any, callbackFinally?: Function,) => {
     try {
-        const response = await callbackAction()
-        return response.data.data
+        const tokenValue = Cookies.get("split.money.token");
+        const tokenExpiresAtValue = Cookies.get("split.money.expiresAt")
+        const tokenExpiresAt = dayjs(tokenExpiresAtValue).unix();
+
+        const config: AxiosRequestConfig = {
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${tokenValue}`,
+            },
+        };
+
+        if (method === "GET" && data) {
+            config.params = data;
+        }
+
+        const methods = {
+            POST: async (url: string, data: any) => {
+                const response = await api.post<ApiBase<Transaction>>(url, data, config);
+                return response.data;
+            },
+            PATCH: async (url: string, data: any) => {
+                const response = await api.patch<ApiBase<Transaction>>(url, data, config);
+                return response.data;
+            },
+            DELETE: async (url: string) => {
+                const response = await api.delete<ApiBase<Transaction>>(url, config);
+                return response.data;
+            },
+            GET: async (url: string) => {
+                const response = await api.get<ApiBase<Transaction>>(url, config);
+                return response.data;
+            }
+        }
+        const response = await methods[method](url, data)
+        return response.data
     }
     catch (error) {
         return thunkAPI.rejectWithValue({ error })
     }
     finally {
-        if (callbackFinally)
-            callbackFinally()
+        callbackFinally && callbackFinally()
     }
 }
 
 export const setTransactionsAsync = createAsyncThunk(
     'transaction/setTransactionsAsync',
-    (userId: string, thunkAPI) => execute(() => {
-        const token = localStorage.getItem('token')
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-        return api.get<ApiBase<Transaction>>('/transaction/' + userId, config)
-    }, thunkAPI)
+    (userId: string, thunkAPI) => execute(`/transaction/${userId}`, "GET", thunkAPI)
 )
 
 export const addTransactionAsync = createAsyncThunk(
     'transaction/addTransactionAsync',
     ({ transaction, userId }: TransactionWithUserId, thunkAPI) =>
-        execute(() => {
-            const token = localStorage.getItem('token')
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-            return api.post<ApiBase<Transaction>>('/transaction', { ...transaction, userId }, config)
-        }, thunkAPI)
+        execute("/transaction", "POST", thunkAPI, { ...transaction, userId })
 )
 
 export const setTransactionByIdAsync = createAsyncThunk(
     'transaction/setTransactionByIdAsync',
-    (id: number, thunkAPI) => execute(() => {
-        const token = localStorage.getItem('token')
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-        return api.get<ApiBase<Transaction>>(`/transaction/${id}`, config)
-    }, thunkAPI)
+    (id: number, thunkAPI) => execute(`/transaction/${id}`, "GET", thunkAPI)
 )
 
 export const updateTransactionAsync = createAsyncThunk(
     'transaction/updateTransactionAsync',
     (transaction: Transaction, thunkAPI) => execute(
-        () => {
-            const token = localStorage.getItem('token')
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-            return api.patch<ApiBase<Transaction>>(`/transaction/${transaction.id}`, transaction, config)
-        },
-        thunkAPI.dispatch(closeModal()))
+        `/transaction/${transaction.id}`,
+        "PATCH",
+        thunkAPI,
+        transaction,
+        () => thunkAPI.dispatch(closeModal())),
 )
 
 export const deleteTransactionAsync = createAsyncThunk(
     'transaction/deleteTransactionAsync',
-    (id: string, thunkAPI) => execute(
-        () => {
-            const token = localStorage.getItem('token')
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-            api.delete<ApiBase<Transaction>>(`/transaction/${id}`, config)
-            return id;
-        }, thunkAPI)
+    (id: string, thunkAPI) => execute(`/transaction/${id}`, "DELETE", thunkAPI)
 )
 
 export const setIncomesAsync = createAsyncThunk(
     'transaction/setIncomesAsync',
-    (userId: string, thunkAPI) => execute(
-        () => {
-            const token = localStorage.getItem('token')
-            const config: AxiosRequestConfig = {
-                params: {
-                    userId,
-                    type: 'income'
-                },
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-            return api.get<ApiBase<Transaction>>('/transaction/type', config)
-        },
-        thunkAPI)
+    (userId: string, thunkAPI) => execute('/transaction/type', "GET", thunkAPI, { userId, type: "income" },)
 )
 
 export const setOutcomesAsync = createAsyncThunk(
     'transaction/setOutcomesAsync',
-    (userId: string, thunkAPI) => execute(
-        () => {
-            const token = localStorage.getItem('token')
-            const config: AxiosRequestConfig = {
-                params: {
-                    userId,
-                    type: 'outcome'
-                },
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-            return api.get<ApiBase<Transaction>>('/transaction/type', config)
-        }
-        , thunkAPI)
+    (userId: string, thunkAPI) => execute('/transaction/type', "GET", thunkAPI, { userId, type: "outcome" },)
 )
 
 export const transactionSlice = createSlice({
@@ -192,7 +159,7 @@ export const transactionSlice = createSlice({
             .addMatcher(action => action.type.endsWith('/rejected'), (state, action) => {
                 state.isLoading = false
                 toast.error("Falha ao realizar a operação, tente novamente mais tarde!")
-                
+
             })
     }
 })

@@ -11,7 +11,7 @@ export interface NavBarLink {
 export const NavBarLinks: Array<NavBarLink> = [
     {
         name: 'Visão Geral',
-        path: '/',
+        path: '/dashboard',
         icon: House,
         auth: false,
         type: "screen"
