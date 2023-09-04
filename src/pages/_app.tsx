@@ -1,12 +1,13 @@
-import { NavBar } from '@/components/NavBar/NavBar'
-import { store } from '@/store'
+import { RootState, store } from '@/store'
 import '@/styles/globals.css'
+import { SessionProvider } from 'next-auth/react'
 import type { AppProps } from 'next/app'
 import { Noto_Sans, Rubik } from 'next/font/google'
-import { Provider } from 'react-redux'
-import { ToastContainer } from 'react-toastify'
+import { useRouter } from 'next/router'
+import { useEffect } from 'react'
+import { Provider, useSelector } from 'react-redux'
 import 'react-toastify/dist/ReactToastify.css'
-import { SessionProvider } from 'next-auth/react'
+import Container from "./container"
 
 const rubik = Rubik({
   subsets: ['latin'],
@@ -25,9 +26,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     <main className={`${notoSans.variable} ${rubik.variable} text-gray-800 relative flex flex-col items-center justify-center gap-20 min-h-screen overflow-x-hidden font-sans bg-background pb-20`}>
       <SessionProvider session={session}>
         <Provider store={store}>
-          <NavBar />
-          <Component {...pageProps} />
-          <ToastContainer />
+          <Container Component={Component} pageProps={pageProps} />
         </Provider>
       </SessionProvider>
     </main>

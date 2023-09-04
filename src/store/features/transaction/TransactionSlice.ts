@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { closeModal } from "../modal/ModalSlice";
 import Cookies from "js-cookie";
 import dayjs from "dayjs";
+import { setUserIsAuthenticated } from "../user/UserSlice";
 
 type TransactionWithUserId = {
     transaction: Transaction
@@ -16,6 +17,9 @@ export const execute = async (url: string, method: "POST" | "PATCH" | "DELETE" |
         const tokenValue = Cookies.get("split.money.token");
         const tokenExpiresAtValue = Cookies.get("split.money.expiresAt")
         const tokenExpiresAt = dayjs(tokenExpiresAtValue).unix();
+
+        if(!tokenValue || dayjs(dayjs(dayjs().unix())).isBefore(tokenExpiresAt))
+            thunkAPI.dispatch(setUserIsAuthenticated(false));
 
         const config: AxiosRequestConfig = {
             headers: {
@@ -59,7 +63,7 @@ export const execute = async (url: string, method: "POST" | "PATCH" | "DELETE" |
 
 export const setTransactionsAsync = createAsyncThunk(
     'transaction/setTransactionsAsync',
-    (userId: string, thunkAPI) => execute(`/transaction/${userId}`, "GET", thunkAPI)
+    (userId: string, thunkAPI) => execute(`/transaction/${userId}`, "GET", thunkAPI) 
 )
 
 export const addTransactionAsync = createAsyncThunk(

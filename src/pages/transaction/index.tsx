@@ -9,13 +9,14 @@ import { useDispatch, useSelector } from 'react-redux';
 
 export default function Transaction() {
     const dispatch = useDispatch<AppDispatch>()
-    const { transactionState, userState } = useSelector((state: RootState) => state)
+    const transactionState = useSelector((state: RootState) => state.transactionState)
+    const userState = useSelector((state: RootState) => state.userState)
     const { data: session } = useSession()
 
     useEffect(() => {
         if (!userState.user.id) return
         dispatch(setTransactionsAsync(userState.user.id))
-    }, [dispatch, userState.user.id])
+    }, [userState.user.id])
 
     return (
         <div className='flex justify-center w-2/3 min-h-screen pt-10 ml-32'>

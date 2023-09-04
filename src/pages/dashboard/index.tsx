@@ -7,7 +7,8 @@ import { useDispatch, useSelector } from "react-redux";
 
 export default function Dashboard() {
     const dispatch = useDispatch<AppDispatch>()
-    const { transactionState, userState } = useSelector((state: RootState) => state)
+    const transactionState = useSelector((state: RootState) => state.transactionState)
+    const userState = useSelector((state: RootState) => state.userState)
 
     useEffect(() => {
         const loadData = async () => {
