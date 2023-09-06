@@ -1,3 +1,5 @@
+'use client'
+
 import { Record } from "@/components/Record/Record";
 import { SearchBar } from "@/components/SearchBar/SearchBar";
 import { AppDispatch, RootState } from "@/store";
@@ -20,7 +22,7 @@ export default function Dashboard() {
     }, [dispatch, userState.user?.id])
     return (
         <>
-            <SearchBar className="mt-10"/>
+            <SearchBar className="mt-10" />
             <Record.Root data={transactionState.transactions} title="Últimos Lançamentos" />
             <Record.Root data={transactionState.outcomes} title="Últimas Despesas" />
         </>

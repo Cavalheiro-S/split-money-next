@@ -1,16 +1,15 @@
 import TransactionCategoryTranslate from '@/assets/translate/TransactionCategory.json'
-import { Button } from '@/components/Button/Button'
 import { TransactionCategoryEnum } from '@/enums/TransactionCategoryEnum'
 import { AppDispatch, RootState } from '@/store'
 import { closeModal } from '@/store/features/modal/ModalSlice'
 import { addTransactionAsync, cleanTransactionActive, updateTransactionAsync } from '@/store/features/transaction/TransactionSlice'
-import { capitalizeFirstLetter, formatInputMoney } from '@/utils'
+import { capitalizeFirstLetter } from '@/utils'
+import { Button, Form, Input, Select } from 'antd'
 import moment from 'moment'
 import { useEffect, useState } from 'react'
-import { Controller, SubmitHandler, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
+import { FormItem } from 'react-hook-form-antd'
 import { useDispatch, useSelector } from 'react-redux'
-import { Input } from '../Input/Input'
-import { Input as InputAnt } from 'antd'
 interface Inputs {
     description: string,
     amount: number,
@@ -22,39 +21,52 @@ interface Inputs {
 export const RecordForm = () => {
 
     const [isNewTransaction, setIsNewTransaction] = useState(false)
-    const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<Inputs>()
-    const { transactionState, userState } = useSelector((state: RootState) => state)
+    const { handleSubmit, formState: { errors }, setValue, control } = useForm<Inputs>()
+    const transactionState = useSelector((state: RootState) => state.transactionState)
+    const userState = useSelector((state: RootState) => state.userState)
     const dispatch = useDispatch<AppDispatch>()
+    const [form] = Form.useForm();
+
+    const initialValues = {
+        description: "",
+        amount: 0,
+        date: moment().format("YYYY-MM-DD"),
+        type: "income",
+        category: ""
+    }
 
     useEffect(() => {
         if (transactionState.transactionActive.id) {
             const { description, amount, date, type, category } = transactionState.transactionActive
 
-            setValue('description', description)
-            setValue('amount', Number(amount))
-            setValue('date', moment(date).format('YYYY-MM-DD'))
-            setValue('type', type)
-            setValue('category', capitalizeFirstLetter(category))
+            form.setFieldValue("description", description)
+            form.setFieldValue('description', description)
+            form.setFieldValue('amount', Number(amount))
+            form.setFieldValue('date', moment(date).format('YYYY-MM-DD'))
+            form.setFieldValue('type', type)
+            form.setFieldValue('category', capitalizeFirstLetter(category))
             setIsNewTransaction(false)
         }
         else
             setIsNewTransaction(true)
-    }, [transactionState.transactionActive, setValue])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [transactionState.transactionActive])
 
-    const onSubmit: SubmitHandler<Inputs> = async data => {
+    const onSubmit = async (data: Inputs) => {
         const { id } = transactionState.transactionActive
+        const transactionData: TransactionWithUserId = {
+            amount: Number(data.amount),
+            category: data.category,
+            date: data.date,
+            description: data.description,
+            type: data.type,
+            userId: userState.user.id
+        }
         if (id) {
-            dispatch(updateTransactionAsync({ ...data, id, userId: userState.user.id }))
+            dispatch(updateTransactionAsync({ id, ...transactionData }))
         }
         else {
-            const transaction: Transaction = {
-                amount: Number(data.amount),
-                category: data.category,
-                date: data.date,
-                description: data.description,
-                type: data.type
-            }
-            dispatch(addTransactionAsync({ transaction, userId: userState.user.id }))
+            dispatch(addTransactionAsync(transactionData))
         }
         dispatch(closeModal())
         dispatch(cleanTransactionActive())
@@ -64,51 +76,64 @@ export const RecordForm = () => {
     const renderCategories = () => {
         const categories = Object.values(TransactionCategoryEnum)
         return categories.map((category, index) => {
-            return (
-                <option key={category + index.toString()} value={category}>{
-                    TransactionCategoryTranslate[category as keyof typeof TransactionCategoryTranslate]
-                }</option>
-            )
+            return {
+                label: TransactionCategoryTranslate[category as keyof typeof TransactionCategoryTranslate],
+                value: category,
+                key: category + index.toString()
+            }
+
         })
     }
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-6 text-gray-800 w-80'>
-            <label className='flex flex-col gap-1 text-sm '>
-                Descrição
-                <Input.Root>
-                    <Input.Input {...register("description", { required: true, minLength: 3, maxLength: 50 })} placeholder='Descrição' type="text" />
-                </Input.Root>
+        <Form
+            form={form}
+            onFinish={handleSubmit(onSubmit)}
+            initialValues={initialValues} 
+            className='flex flex-col gap-6 p-10 text-gray-800'>
+            <FormItem
+                label="Descrição"
+                name="description"
+                shouldUpdate
+                control={control}>
+                <Input placeholder='Descrição' type="text" />
                 {errors.description && <span className='text-red-500'>Descrição deve ter entre 3 e 50 caracteres</span>}
-            </label>
-            <label className='flex flex-col gap-1 text-sm'>
-                Data
-                <Input.Root>
-                    <Input.Input defaultValue={moment().format("YYYY-MM-DD")} {...register("date")} type="date" />
-                </Input.Root>
-            </label>
-            <label className='flex flex-col gap-1 text-sm'>
-                Valor
-                <Controller name="amount"
-                    control={control}
-                    render={props => {
-                        return <InputAnt size='large' addonBefore="R$" type='number' {...props.field} />
-                    }} />
+            </FormItem>
+            <FormItem
+                label="Data"
+                name="date"
+                shouldUpdate
+                control={control}>
+                <Input placeholder='Data' type="date" />
+            </FormItem>
+            <FormItem
+                label="Valor"
+                name="amount"
+                shouldUpdate
+                control={control}>
+                <Input size='large' addonBefore="R$" type='number' />
                 {errors.amount && <span className='text-red-500'>Valor deve ser maior que 0</span>}
-            </label>
-            <label className='flex flex-col gap-1 text-sm'>
-                Tipo
-                <select defaultValue="income" {...register("type",)} className='px-2 py-2 bg-gray-200 rounded outline-none'>
-                    <option value='income'>Entrada</option>
-                    <option value='outcome'>Saída</option>
-                </select>
-            </label>
-            <label className='flex flex-col gap-1 text-sm'>
-                Categoria
-                <select {...register("category", { required: true })} className='px-2 py-2 bg-gray-200 rounded outline-none'>
-                    {renderCategories()}
-                </select>
-                {errors.category && <span className='text-red-500'>Categoria é obrigatória</span>}
-            </label>
-            <Button>{isNewTransaction ? "Adicionar" : "Atualizar"}</Button>
-        </form>)
+            </FormItem>
+
+            <FormItem
+                label="Tipo"
+                name="type"
+                shouldUpdate
+                control={control}
+            >
+                <Select placeholder='Tipo'>
+                    <Select.Option value="income">Entrada</Select.Option>
+                    <Select.Option value="outcome">Despesa</Select.Option>
+                </Select>
+            </FormItem>
+
+            <FormItem
+                label="Categoria"
+                name="category"
+                shouldUpdate
+                control={control}>
+                <Select placeholder='Categoria' options={renderCategories()} />
+            </FormItem>
+            {errors.category && <span className='text-red-500'>Categoria é obrigatória</span>}
+            <Button htmlType='submit'>{isNewTransaction ? "Adicionar" : "Atualizar"}</Button>
+        </Form>)
 }

@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from "@/components/Button/Button";
 import { AppDispatch } from "@/store";
 import { signOutAsync } from "@/store/features/user/UserSlice";

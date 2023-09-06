@@ -23,3 +23,7 @@ interface Transaction {
     type: "income" | "outcome",
     userId?: string
 }
+
+interface TransactionWithUserId extends Transaction {
+    userId: string,
+}

@@ -6,11 +6,9 @@ import { closeModal } from "../modal/ModalSlice";
 import Cookies from "js-cookie";
 import dayjs from "dayjs";
 import { setUserIsAuthenticated } from "../user/UserSlice";
+import { AuthenticationError } from "@/exceptions";
 
-type TransactionWithUserId = {
-    transaction: Transaction
-    userId: string,
-}
+
 
 export const execute = async (url: string, method: "POST" | "PATCH" | "DELETE" | "GET", thunkAPI: any, data?: any, callbackFinally?: Function,) => {
     try {
@@ -18,8 +16,11 @@ export const execute = async (url: string, method: "POST" | "PATCH" | "DELETE" |
         const tokenExpiresAtValue = Cookies.get("split.money.expiresAt")
         const tokenExpiresAt = dayjs(tokenExpiresAtValue).unix();
 
-        if(!tokenValue || dayjs(dayjs(dayjs().unix())).isBefore(tokenExpiresAt))
-            thunkAPI.dispatch(setUserIsAuthenticated(false));
+        if (!tokenValue || dayjs(dayjs().unix()).isAfter(tokenExpiresAt)) {
+            Cookies.remove("split.money.token")
+            Cookies.remove("split.money.expiresAt")
+            throw new AuthenticationError("Invalid token")
+        }
 
         const config: AxiosRequestConfig = {
             headers: {
@@ -54,7 +55,10 @@ export const execute = async (url: string, method: "POST" | "PATCH" | "DELETE" |
         return response.data
     }
     catch (error) {
-        return thunkAPI.rejectWithValue({ error })
+        if (error instanceof AuthenticationError) {
+            thunkAPI.dispatch(setUserIsAuthenticated(false))
+        }
+        return thunkAPI.rejectWithValue(error)
     }
     finally {
         callbackFinally && callbackFinally()
@@ -63,12 +67,12 @@ export const execute = async (url: string, method: "POST" | "PATCH" | "DELETE" |
 
 export const setTransactionsAsync = createAsyncThunk(
     'transaction/setTransactionsAsync',
-    (userId: string, thunkAPI) => execute(`/transaction/${userId}`, "GET", thunkAPI) 
+    (userId: string, thunkAPI) => execute(`/transaction/${userId}`, "GET", thunkAPI)
 )
 
 export const addTransactionAsync = createAsyncThunk(
     'transaction/addTransactionAsync',
-    ({ transaction, userId }: TransactionWithUserId, thunkAPI) =>
+    ({ userId, ...transaction }: TransactionWithUserId, thunkAPI) =>
         execute("/transaction", "POST", thunkAPI, { ...transaction, userId })
 )
 
@@ -162,6 +166,10 @@ export const transactionSlice = createSlice({
             })
             .addMatcher(action => action.type.endsWith('/rejected'), (state, action) => {
                 state.isLoading = false
+                if (action.payload instanceof AuthenticationError) {
+                    toast.error("Seu login expirou")
+                    return;
+                }
                 toast.error("Falha ao realizar a operação, tente novamente mais tarde!")
 
             })

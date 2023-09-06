@@ -1,7 +1,9 @@
 import { api } from '@/data/axios';
+import { AuthenticationError } from '@/exceptions';
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import dayjs from 'dayjs';
 import Cookies from "js-cookie"
+import { toast } from 'react-toastify';
 
 interface UserSignup {
     name: string,
@@ -35,6 +37,9 @@ export const getUserByEmail = createAsyncThunk(
             return responseUser.data.data
         }
         catch (error) {
+            if (error instanceof AuthenticationError) {
+                thunkAPI.dispatch(setUserIsAuthenticated(false))
+            }
             thunkAPI.rejectWithValue(error);
         }
     }
@@ -49,9 +54,10 @@ export const signInAsync = createAsyncThunk(
             if (!response.data.data)
                 throw new Error()
 
-            Cookies.set('split.money.token', response.data.data.access_token, { expires: 7 });
+            thunkApi.dispatch(setUserIsAuthenticated(true));
+            Cookies.set('split.money.token', response.data.data.access_token);
             const date = dayjs(response.data.data.expiresIn * 1000);
-            Cookies.set('split.money.expiresAt', date.toISOString(), { expires: 7 });
+            Cookies.set('split.money.expiresAt', date.toISOString());
             return response.data.data
         }
         catch (error) {
@@ -84,9 +90,9 @@ export const signOutAsync = createAsyncThunk(
     'user/signOutAsync',
     async (_, thunkApi) => {
         try {
-
             Cookies.remove('split.money.token');
             Cookies.remove('split.money.expiresAt')
+            thunkApi.dispatch(setUserIsAuthenticated(false))
         }
         catch (error) {
             return thunkApi.rejectWithValue({ error })
@@ -111,32 +117,20 @@ const userSlice = createSlice({
             .addCase(getUserByEmail.fulfilled, (state, action) => {
                 state.user = action.payload as User;
             })
-            .addMatcher(
-                (action) => {
-                    return action.type.endsWith('pending')
+            .addMatcher(action => action.type.endsWith('fulfilled'), state => {
+                state.loading = false;
+            })
+            .addMatcher(action => action.type.endsWith('pending'), state => {
+                state.loading = true;
+            })
+            .addMatcher(action => action.type.endsWith('rejected'), (state, action) => {
+                state.loading = false;
+                console.log('rejected');
+                if (action.payload instanceof AuthenticationError) {
+                    toast.error("Seu login expirou")
+                    return;
                 }
-                , (state) => {
-                    state.loading = true;
-                }
-            )
-            .addMatcher(
-                (action) => {
-                    return action.type.endsWith('rejected')
-                }
-                , (state) => {
-                    state.loading = false;
-                    console.log('rejected');
-
-                }
-            )
-            .addMatcher(
-                (action) => {
-                    return action.type.endsWith('fulfilled')
-                }
-                , (state) => {
-                    state.loading = false;
-                }
-            )
+            })
     }
 });
 

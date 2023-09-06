@@ -1,15 +1,14 @@
-import GoogleLogo from '@/assets/imgs/icons8-google-logo.svg'
-import { Input } from '@/components/Input/Input'
+'use client'
+
 import { AppDispatch, RootState } from '@/store'
 import { getUserByEmail, signInAsync } from '@/store/features/user/UserSlice'
 import { GoogleOutlined } from '@ant-design/icons'
-import { Button } from 'antd'
-import { signIn, useSession } from 'next-auth/react'
-import Image from 'next/image'
-import { useRouter } from 'next/router'
-import { useEffect } from 'react'
-import { SubmitHandler, useForm } from 'react-hook-form'
+import { Button, Input } from 'antd'
+import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { Controller, SubmitHandler, useForm } from 'react-hook-form'
 import { useDispatch, useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
 
 interface Inputs {
   email: string,
@@ -18,32 +17,24 @@ interface Inputs {
 
 export default function Login() {
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<Inputs>()
+  const { register, handleSubmit, control, formState: { errors }, setValue } = useForm<Inputs>()
   const { user } = useSelector((state: RootState) => state.userState)
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
-
-  // useEffect(() => {
-  //   const token = localStorage.getItem('split.money.token')
-  //   const tokenExpiredAt = new Date(localStorage.getItem('split.money.expiresAt') ?? "")
-
-  //   const getData = async () => {
-  //     if (token && new Date() < tokenExpiredAt) {
-  //       await dispatch(getUserByEmail({ email: user.email }))
-  //     }
-  //   }
-
-  //   getData()
-  // }, [])
 
   const handleGoogleSignin = async () => {
     await signIn('index', { callbackUrl: "/" })
   }
 
   const OnSubmit: SubmitHandler<Inputs> = async data => {
-    await dispatch(signInAsync({ email: data.email, password: data.password }))
-    await dispatch(getUserByEmail({ email: data.email }))
-    router.push("/dashboard")
+    try {
+      await dispatch(signInAsync({ email: data.email, password: data.password }))
+      await dispatch(getUserByEmail({ email: data.email }))
+      router.replace("/dashboard")
+    }
+    catch (err) {
+      toast.error("Não foi possível fazer o login")
+    }
   }
 
   return (
@@ -56,15 +47,21 @@ export default function Login() {
       <form onSubmit={handleSubmit(OnSubmit)} className='flex flex-col gap-5'>
         <label>
           Email
-          <Input.Root>
-            <Input.Input {...register("email")} type="email" placeholder='email@email.com' />
-          </Input.Root>
+          <Controller
+            name='email'
+            control={control}
+            rules={{ required: true }}
+            render={props => <Input size='large' placeholder='email@email.com' {...props.field} />}
+          />
         </label>
         <label>
           Senha
-          <Input.Root>
-            <Input.Password {...register("password")} placeholder='********' />
-          </Input.Root>
+          <Controller
+            name='password'
+            control={control}
+            rules={{ required: true }}
+            render={props => <Input size='large' type='password' placeholder='********' {...props.field} />}
+          />
         </label>
         <Button htmlType="submit" size='large'>Entrar</Button>
         <Button
