@@ -38,8 +38,12 @@ export const RecordForm = () => {
     useEffect(() => {
         if (transactionState.transactionActive.id) {
             const { description, amount, date, type, category } = transactionState.transactionActive
+            setValue('description', description)
+            setValue('amount', Number(amount))
+            setValue('date', moment(date).format('YYYY-MM-DD'))
+            setValue('type', type)
+            setValue('category', capitalizeFirstLetter(category))
 
-            form.setFieldValue("description", description)
             form.setFieldValue('description', description)
             form.setFieldValue('amount', Number(amount))
             form.setFieldValue('date', moment(date).format('YYYY-MM-DD'))
@@ -47,8 +51,10 @@ export const RecordForm = () => {
             form.setFieldValue('category', capitalizeFirstLetter(category))
             setIsNewTransaction(false)
         }
-        else
+        else{
             setIsNewTransaction(true)
+            form.setFieldsValue(initialValues)
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [transactionState.transactionActive])
 
@@ -88,8 +94,9 @@ export const RecordForm = () => {
         <Form
             form={form}
             onFinish={handleSubmit(onSubmit)}
-            initialValues={initialValues} 
-            className='flex flex-col gap-6 p-10 text-gray-800'>
+            initialValues={initialValues}
+            layout='vertical'
+            className='p-4 text-gray-800'>
             <FormItem
                 label="Descrição"
                 name="description"
@@ -110,7 +117,7 @@ export const RecordForm = () => {
                 name="amount"
                 shouldUpdate
                 control={control}>
-                <Input size='large' addonBefore="R$" type='number' />
+                <Input addonBefore="R$" type='number' />
                 {errors.amount && <span className='text-red-500'>Valor deve ser maior que 0</span>}
             </FormItem>
 
@@ -134,6 +141,6 @@ export const RecordForm = () => {
                 <Select placeholder='Categoria' options={renderCategories()} />
             </FormItem>
             {errors.category && <span className='text-red-500'>Categoria é obrigatória</span>}
-            <Button htmlType='submit'>{isNewTransaction ? "Adicionar" : "Atualizar"}</Button>
+            <Button className='w-full' size='large' htmlType='submit'>{isNewTransaction ? "Adicionar" : "Atualizar"}</Button>
         </Form>)
 }

@@ -22,7 +22,7 @@ export default function Page({ Component, pageProps: { session, ...pageProps } }
         <>
             <NavBar />
             <Component {...pageProps} />
-            <ToastContainer />
+            <ToastContainer limit={1}/>
         </>
     )
 }

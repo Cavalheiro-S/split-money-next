@@ -4,7 +4,7 @@ import { RootState } from '@/store';
 import { HomeOutlined, LogoutOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Menu, MenuProps } from 'antd';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useReducer, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 export const NavBar = () => {
@@ -37,6 +37,6 @@ export const NavBar = () => {
     };
 
     return (
-        <Menu className='absolute top-0 left-0 w-48 h-full' onClick={onClick} selectedKeys={[current]} mode="vertical" items={items} />   
+        userState.isAuthenticated ? <Menu className='absolute top-0 left-0 w-48 h-full' onClick={onClick} selectedKeys={[current]} mode="vertical" items={items} /> : null  
     )
 }

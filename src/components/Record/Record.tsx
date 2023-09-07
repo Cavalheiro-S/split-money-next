@@ -1,14 +1,15 @@
-import { RecordModal } from "./Modal"
 import { AppDispatch } from '@/store'
 import { openModal } from '@/store/features/modal/ModalSlice'
 import { deleteTransactionAsync, setTransactionActive } from '@/store/features/transaction/TransactionSlice'
 import { capitalizeFirstLetter } from '@/utils'
 import { CreditCard, Money, Pencil, Trash } from '@phosphor-icons/react'
+import { Divider, Space, Table } from "antd"
+import { ColumnsType } from "antd/es/table"
 import moment from "moment"
 import { useRouter } from "next/router"
-import React, { useState } from 'react'
+import React from 'react'
 import { useDispatch } from 'react-redux'
-import { twMerge } from 'tailwind-merge'
+import { RecordModal } from "./Modal"
 
 interface RecordProps {
   title: string,
@@ -21,12 +22,50 @@ interface RecordProps {
 
 export const RecordRoot = ({ title, className, data, children, hasActions }: RecordProps) => {
 
-  const [rowIsClicked, setRowIsClicked] = useState({
-    isClicked: false,
-    row: 0
-  })
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
+
+  const columns: ColumnsType<Transaction> = [
+    {
+      render: (_, record) => {
+        if (record.type === "income")
+          return <Money className='w-8 h-8 text-green-500' />
+        return <CreditCard className='w-8 h-8 text-red-500' />
+      }
+    },
+    {
+      title: 'Descrição',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: 'Data',
+      dataIndex: 'date',
+      key: 'date',
+      render: (text: Date) => <p>{moment(text).format('DD/MM/YYYY')}</p>
+    },
+    {
+      title: 'Categoria',
+      dataIndex: 'category',
+      key: 'category',
+      render: (text: string) => <span>{capitalizeFirstLetter(text)}</span>
+    },
+    {
+      title: 'Valor',
+      dataIndex: 'amount',
+      key: 'amount',
+    },
+    {
+      title: 'Ações',
+      key: 'edit',
+      render: (_, record) => (
+        <Space>
+          <span className='cursor-pointer hover:text-blue-600' onClick={() => handleEdit(record)}>Editar</span>
+          <span className='cursor-pointer hover:text-red-600' onClick={() => handleDelete(record.id ?? "")}>Deletar</span>
+        </Space>
+      )
+    },
+  ]
 
   const handleDelete = async (id: string) => dispatch(deleteTransactionAsync(id))
 
@@ -37,64 +76,29 @@ export const RecordRoot = ({ title, className, data, children, hasActions }: Rec
     }
   }
 
-  const handleRowClick = (index: number) => {
-    if (!hasActions){
+  const handleRowClick = (record: Transaction) => {
+    if (!hasActions) {
       router.push(`/transaction/`)
       dispatch(openModal())
-      dispatch(setTransactionActive(data[index]))
+      dispatch(setTransactionActive(record))
     }
-    setRowIsClicked({
-      isClicked: !rowIsClicked.isClicked,
-      row: index
-    })
   }
 
   return (
-    <div className={twMerge('flex flex-col gap-10 p-8 bg-white rounded', className)}>
-      <div className='flex justify-between'>
-        <h3 className='font-semibold text-gray-800 font-heading'>{title}</h3>
-        {children}
-      </div>
-      <table className='w-full'>
-        <tbody className=''>
-          <tr>
-            <th className='p-4 text-gray-800 text-start'></th>
-            <th className='p-4 text-gray-800 text-start'>Descrição</th>
-            <th className='p-4 text-gray-800 text-start'>Data</th>
-            <th className='p-4 text-gray-800 text-start'>Categoria</th>
-            <th className='p-4 text-gray-800 text-start'>Valor</th>
-          </tr>
-          {data && Array.isArray(data) && data.map((transaction, index) => {
-            return (
-              <>
-                <tr
-                  onClick={() => handleRowClick(index)}
-                  key={transaction + index.toString()}
-                  className={'text-sm text-center text-gray-800 transition-all hover:bg-gray-100'}>
-                  <td className='flex justify-center py-4 text-gray-800 text-start'>
-                    {transaction.type === "income"
-                      ? <Money className="h-10 w-10 p-1 rounded-full bg-green-200 text-green-500" />
-                      : <CreditCard className="h-10 w-10 p-1 rounded-full bg-red-200 text-red-500" />}
-                  </td>
-                  <td className='p-4 text-gray-800 text-start'>{capitalizeFirstLetter(transaction.description)}</td>
-                  <td className='p-4 text-gray-800 text-start'>{moment(transaction.date).format("DD/MM/YYYY")}</td>
-                  <td className='p-4 text-gray-800 text-start'>{transaction.category}</td>
-                  <td className='p-4 text-gray-800 text-start'>R$ {transaction.amount}</td>
-                  {hasActions && rowIsClicked.isClicked && rowIsClicked.row === index &&
-                    <td>
-                      <div className="flex gap-2">
-                        <Pencil className='w-6 h-6 hover:text-blue-300 row-start-1' onClick={() => handleEdit(transaction)} />
-                        <Trash className='w-6 h-6 hover:text-red-300 row-start-1' onClick={() => handleDelete(transaction.id?.toString() ?? "0")} />
-                      </div>
-                    </td>}
-                </tr>
-              </>
-            )
-          })
-          }
-        </tbody>
-      </table>
+    <div>
+      {hasActions && (
+        <>
+          <RecordModal />
+          <Divider />
+        </>
+      )}
+      <Table columns={columns} dataSource={data} onRow={record => {
+        return {
+          onClick: () => handleRowClick(record)
+        }
+      }} />
     </div>
+
   )
 }
 

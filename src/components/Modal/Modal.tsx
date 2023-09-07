@@ -7,12 +7,12 @@ import { X } from '@phosphor-icons/react';
 import * as Dialog from '@radix-ui/react-dialog';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {Button, Modal as ModalAnt} from "antd"
+import { Button, Modal as ModalAnt } from "antd"
 
 interface ModalProps {
-    trigger: React.ReactNode
+    trigger?: React.ReactNode
     content: React.ReactNode
-    title: string
+    title?: string
 }
 
 export const Modal = ({ trigger, content, title }: ModalProps) => {
@@ -30,13 +30,13 @@ export const Modal = ({ trigger, content, title }: ModalProps) => {
     }
 
     return (
-        <>
-        <Button onClick={handleModal}>
-            Adicionar
-        </Button>
-        <ModalAnt open={isOpen} onCancel={handleModal} footer={[]}>
-            {content}
-        </ModalAnt>
-        </>
+        <div className='flex justify-end'>
+            <Button type='link' onClick={handleModal}>
+                Adicionar
+            </Button>
+            <ModalAnt open={isOpen} onCancel={handleModal} footer={[]}>
+                {content}
+            </ModalAnt>
+        </div>
     )
 }

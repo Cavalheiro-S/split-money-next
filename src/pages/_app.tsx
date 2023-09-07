@@ -1,13 +1,9 @@
-import { store } from '@/store'
+import { Providers } from '@/providers'
 import '@/styles/globals.css'
-import { SessionProvider } from 'next-auth/react'
 import type { AppProps } from 'next/app'
 import { Noto_Sans, Rubik } from 'next/font/google'
-import { Provider } from 'react-redux'
 import 'react-toastify/dist/ReactToastify.css'
 import Container from "./container"
-import { AntDesignProvider } from '@/providers/AntDesignProvider'
-import { Providers } from '@/providers'
 
 const rubik = Rubik({
   subsets: ['latin'],

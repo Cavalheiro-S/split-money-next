@@ -132,7 +132,7 @@ export const transactionSlice = createSlice({
             .addCase(addTransactionAsync.fulfilled, (state, action) => {
                 const transactionPayload = action.payload as Transaction
                 state.transactions.push(transactionPayload)
-                toast.success('Transação adicionada com sucesso!')
+                toast.success(`Transação ${transactionPayload.description} adicionada com sucesso!`)
             })
             .addCase(setTransactionByIdAsync.fulfilled, (state, action) => {
                 const transactionPayload = action.payload as Transaction
@@ -142,13 +142,13 @@ export const transactionSlice = createSlice({
                 const transactionPayload = action.payload as Transaction
                 const index = state.transactions.findIndex(transaction => transaction.id === transactionPayload.id)
                 state.transactions[index] = transactionPayload
-                toast.success('Transação atualizada com sucesso!')
+                toast.success(`Transação ${transactionPayload.description} atualizada com sucesso!`)
             })
             .addCase(deleteTransactionAsync.fulfilled, (state, action) => {
                 const id = action.payload as string
                 const index = state.transactions.findIndex(transaction => transaction.id === id)
                 state.transactions.splice(index, 1)
-                toast.success('Transação deletada com sucesso!')
+                toast.success(`Transação deletada com sucesso!`)
             })
             .addCase(setIncomesAsync.fulfilled, (state, action) => {
                 const incomesPayload = action.payload as Transaction[]
