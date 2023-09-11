@@ -3,6 +3,7 @@ interface ApiBase<T> {
     error?: string,
     message?: string,
     statusCode?: number,
+    codeError?: string
 }
 
 interface User {

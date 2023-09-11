@@ -1,26 +1,51 @@
 'use client'
 
 import { AppDispatch, RootState } from '@/store'
-import { getUserByEmail, signInAsync } from '@/store/features/user/UserSlice'
+import { setUserError, signInAsync } from '@/store/features/user/UserSlice'
 import { GoogleOutlined } from '@ant-design/icons'
-import { Button, Input } from 'antd'
+import { Button, Form, Input } from 'antd'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Controller, SubmitHandler, useForm } from 'react-hook-form'
+import { useEffect } from 'react'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import { FormItem } from 'react-hook-form-antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from 'zod'
+import Loading from '../loading'
 
 interface Inputs {
   email: string,
   password: string
 }
 
+const schema = z.object({
+  email: z.string().nonempty({ message: "Email não pode ser vazio" }),
+  password: z.string().nonempty({ message: "Senha não pode ser vazio" })
+})
+
 export default function Login() {
 
-  const { register, handleSubmit, control, formState: { errors }, setValue } = useForm<Inputs>()
-  const { user } = useSelector((state: RootState) => state.userState)
+  const { handleSubmit, control } = useForm<Inputs>({
+    defaultValues:{
+      email: "",
+      password: ""
+    },
+    resolver: zodResolver(schema)
+  })
+  const { error, isAuthenticated, loading } = useSelector((state: RootState) => state.userState)
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
+
+  useEffect(() => {
+    isAuthenticated && router.push('/dashboard')
+
+    return () => {
+      dispatch(setUserError(""))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, router])
 
   const handleGoogleSignin = async () => {
     await signIn('index', { callbackUrl: "/" })
@@ -28,49 +53,46 @@ export default function Login() {
 
   const OnSubmit: SubmitHandler<Inputs> = async data => {
     try {
-      await dispatch(signInAsync({ email: data.email, password: data.password }))
-      await dispatch(getUserByEmail({ email: data.email }))
-      router.replace("/dashboard")
+      const something = await dispatch(signInAsync({ email: data.email, password: data.password }))
     }
     catch (err) {
       toast.error("Não foi possível fazer o login")
     }
   }
 
-  return (
+  return loading ? <Loading /> : (
 
     <div className='flex flex-col gap-5 p-8 bg-white rounded'>
       <div>
         <h3 className='text-2xl font-semibold'>Acesse sua conta</h3>
         <span className='text-gray-500'>Informe seus dados para acessar , ou acesse com outra forma de login</span>
       </div>
-      <form onSubmit={handleSubmit(OnSubmit)} className='flex flex-col gap-5'>
-        <label>
-          Email
-          <Controller
-            name='email'
-            control={control}
-            rules={{ required: true }}
-            render={props => <Input size='large' placeholder='email@email.com' {...props.field} />}
-          />
-        </label>
-        <label>
-          Senha
-          <Controller
-            name='password'
-            control={control}
-            rules={{ required: true }}
-            render={props => <Input size='large' type='password' placeholder='********' {...props.field} />}
-          />
-        </label>
-        <Button htmlType="submit" size='large'>Entrar</Button>
-        <Button
-          size='large'
-          icon={<GoogleOutlined />}
-          onClick={handleGoogleSignin}>
-          Entrar com Google
-        </Button>
-      </form>
+      <Form layout='vertical' onFinish={handleSubmit(OnSubmit)}>
+        {<span className='font-bold text-red-500'>{error}</span>}
+        <FormItem
+          label="Email"
+          name='email'
+          control={control}
+        >
+          <Input size='large' placeholder='Adicione seu email' />
+        </FormItem>
+        <FormItem
+          label="Senha"
+          name='password'
+          control={control}
+        >
+          <Input.Password size='large' type='password' placeholder='********' />
+        </FormItem>
+        <div className='flex flex-col gap-4'>
+          <Button htmlType="submit" size='large'>Entrar</Button>
+          <Button
+            size='large'
+            icon={<GoogleOutlined />}
+            onClick={handleGoogleSignin}>
+            Entrar com Google
+          </Button>
+        </div>
+      </Form>
     </div>
   )
 }

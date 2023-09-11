@@ -31,7 +31,7 @@ export const Modal = ({ trigger, content, title }: ModalProps) => {
 
     return (
         <div className='flex justify-end'>
-            <Button type='link' onClick={handleModal}>
+            <Button onClick={handleModal}>
                 Adicionar
             </Button>
             <ModalAnt open={isOpen} onCancel={handleModal} footer={[]}>

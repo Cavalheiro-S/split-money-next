@@ -15,11 +15,12 @@ const initialState = {
     user: {} as User,
     loading: false,
     isAuthenticated: false,
+    error: ""
 };
 
 export const getUserByEmail = createAsyncThunk(
     'user/getUserByEmail',
-    async (action: { email: string }, thunkAPI) => {
+    async (email: string, thunkAPI) => {
         try {
             const tokenValue = Cookies.get("split.money.token");
             const tokenExpiresAtValue = Cookies.get("split.money.expiresAt")
@@ -33,7 +34,7 @@ export const getUserByEmail = createAsyncThunk(
                     Authorization: `Bearer ${Cookies.get("split.money.token")}`,
                 }
             }
-            const responseUser = await api.post<ApiBase<User>>("/user/getByEmail", { email: action.email }, config)
+            const responseUser = await api.post<ApiBase<User>>("/user/getByEmail", { email: email }, config)
             return responseUser.data.data
         }
         catch (error) {
@@ -49,15 +50,22 @@ export const signInAsync = createAsyncThunk(
     'user/signInAsync',
     async (action: { email: string, password: string }, thunkApi) => {
         try {
-            const response = await api.post<ApiBase<{ access_token: string, expiresIn: number }>>("/auth/login",
+            const response = await api.post<ApiBase<{ access_token: string, expiresIn: number }>>(
+                "/auth/login",
                 { email: action.email, password: action.password })
+            if (response.data.codeError === "email-password/invalid" || response.data.statusCode === 400) {
+                thunkApi.dispatch(setUserError("Email ou senha inválidas"))
+                return;
+            }
             if (!response.data.data)
                 throw new Error()
 
-            thunkApi.dispatch(setUserIsAuthenticated(true));
             Cookies.set('split.money.token', response.data.data.access_token);
             const date = dayjs(response.data.data.expiresIn * 1000);
             Cookies.set('split.money.expiresAt', date.toISOString());
+
+            thunkApi.dispatch(setUserIsAuthenticated(true));
+            await thunkApi.dispatch(getUserByEmail(action.email));
             return response.data.data
         }
         catch (error) {
@@ -104,7 +112,8 @@ const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        setUserIsAuthenticated: (state, action: PayloadAction<boolean>) => { state.isAuthenticated = action.payload }
+        setUserIsAuthenticated: (state, action: PayloadAction<boolean>) => { state.isAuthenticated = action.payload },
+        setUserError: (state, action: PayloadAction<string>) => { state.error = action.payload }
     },
     extraReducers: (builder) => {
         builder
@@ -125,15 +134,16 @@ const userSlice = createSlice({
             })
             .addMatcher(action => action.type.endsWith('rejected'), (state, action) => {
                 state.loading = false;
-                console.log('rejected');
                 if (action.payload instanceof AuthenticationError) {
+                    state.user = {} as User;
                     toast.error("Seu login expirou")
+                    toast.clearWaitingQueue();
                     return;
                 }
             })
     }
 });
 
-export const { setUserIsAuthenticated } = userSlice.actions;
+export const { setUserIsAuthenticated, setUserError } = userSlice.actions;
 
 export default userSlice.reducer;

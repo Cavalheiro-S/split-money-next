@@ -1,5 +1,4 @@
 import type { AppProps } from 'next/app'
-import { AntDesignProvider } from "./AntDesignProvider"
 import { NextAuthProvider } from "./NextAuthProvider"
 import { ReactReduxProvider } from "./ReactReduxProvider"
 
@@ -13,9 +12,7 @@ export const Providers = ({ pageProps: { session }, children }: Props) => {
     return (
         <ReactReduxProvider>
             <NextAuthProvider session={session}>
-                <AntDesignProvider>
-                    {children}
-                </AntDesignProvider >
+                {children}
             </NextAuthProvider>
         </ReactReduxProvider>
     )

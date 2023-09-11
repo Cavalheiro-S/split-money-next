@@ -167,7 +167,7 @@ export const transactionSlice = createSlice({
             .addMatcher(action => action.type.endsWith('/rejected'), (state, action) => {
                 state.isLoading = false
                 if (action.payload instanceof AuthenticationError) {
-                    toast.error("Seu login expirou")
+                    toast.length > 0 && toast.error("Seu login expirou")
                     return;
                 }
                 toast.error("Falha ao realizar a operação, tente novamente mais tarde!")
