@@ -21,11 +21,10 @@ interface RecordProps {
   className?: string,
 }
 
-export const RecordRoot = ({ className, data, hasActions, title }: RecordProps) => {
+export const TableRecord = ({ className, data, hasActions, title }: RecordProps) => {
 
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
-  const [modalDeleteConfirmOpen, setModalDeleteConfirmOpen] = useState(false)
 
   const columns: ColumnsType<Transaction> = [
     {
@@ -61,15 +60,18 @@ export const RecordRoot = ({ className, data, hasActions, title }: RecordProps) 
       key: 'amount',
       render: (text: number) => <p>{Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(text)}</p>
     },
-    {
+  ]
+
+  if (hasActions)
+    columns.push({
       title: 'Ações',
       key: 'actions',
       dataIndex: 'id',
-      render: (id, record) => (
+      render: (_, record) => (
         <Space>
           <span className='cursor-pointer hover:text-blue-600' onClick={() => handleEdit(record)}>Editar</span>
           <Popconfirm
-            icon={<DeleteOutlined style={{color: "red"}}/>}
+            icon={<DeleteOutlined style={{ color: "red" }} />}
             title="Deletar a transação"
             okText="Deletar"
             cancelText="Não"
@@ -80,9 +82,7 @@ export const RecordRoot = ({ className, data, hasActions, title }: RecordProps) 
           </Popconfirm>
         </Space>
       )
-    }
-  ]
-
+    })
 
 
   const handleDelete = async (id: string) => dispatch(deleteTransactionAsync(id))
@@ -110,7 +110,7 @@ export const RecordRoot = ({ className, data, hasActions, title }: RecordProps) 
       columns={columns}
       title={() => (
         <div className='flex items-center justify-between w-full'>
-          <h3 className='font-bold'>{title}</h3>
+          <h3 className='font-sans font-semibold text-gray-700'>{title}</h3>
           {hasActions && <RecordModal />}
         </div>
       )}
@@ -122,9 +122,4 @@ export const RecordRoot = ({ className, data, hasActions, title }: RecordProps) 
 
 
   )
-}
-
-export const Record = {
-  Root: RecordRoot,
-  Modal: RecordModal,
 }

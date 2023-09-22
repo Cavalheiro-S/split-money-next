@@ -1,14 +1,11 @@
-'use client'
-
-import { Record } from "@/components/Record/Record";
+import { TableRecord } from "@/components/Record/Record";
 import { AppDispatch, RootState } from "@/store";
 import { setOutcomesAsync, setTransactionsAsync } from "@/store/features/transaction/TransactionSlice";
 import { getUserByEmail } from "@/store/features/user/UserSlice";
+import { Space } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Loading from "../loading";
-import { Space } from "antd";
 
 export default function Dashboard() {
     const dispatch = useDispatch<AppDispatch>()
@@ -27,10 +24,10 @@ export default function Dashboard() {
         loadData()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userState.user?.id])
-    return userState.loading ? <Loading /> : (
+    return (
         <Space direction="vertical" className="mt-10">
-            <Record.Root data={transactionState.transactions} title="Últimos Lançamentos" />
-            <Record.Root data={transactionState.outcomes} title="Últimas Despesas" />
+            <TableRecord data={transactionState.transactions} title="Últimos Lançamentos" />
+            <TableRecord data={transactionState.outcomes} title="Últimas Despesas" />
         </Space>
     )
 }

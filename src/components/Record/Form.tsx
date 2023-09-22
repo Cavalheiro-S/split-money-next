@@ -82,21 +82,19 @@ export const RecordForm = () => {
     }, [transactionState.transactionActive])
 
     const onSubmit = async (data: Inputs) => {
+        
         const { id } = transactionState.transactionActive
         const transactionData: TransactionWithUserId = {
             amount: Number(data.amount),
             category: data.category,
-            date: data.date,
+            date: moment(data.date).toDate(),
             description: data.description,
             type: data.type,
             userId: userState.user.id
         }
-        if (id) {
-            dispatch(updateTransactionAsync({ id, ...transactionData }))
-        }
-        else {
-            dispatch(addTransactionAsync(transactionData))
-        }
+        dispatch(id
+            ? updateTransactionAsync({ id, ...transactionData })
+            : addTransactionAsync(transactionData))
         dispatch(closeModal())
         dispatch(cleanTransactionActive())
     }
@@ -130,7 +128,7 @@ export const RecordForm = () => {
                 name="date"
                 shouldUpdate
                 control={control}>
-                <Input placeholder='Data' type="date" />
+                <Input placeholder='Data' type="date"/>
             </FormItem>
             <FormItem
                 label="Valor"

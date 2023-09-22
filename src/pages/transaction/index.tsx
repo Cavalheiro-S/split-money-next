@@ -1,13 +1,13 @@
 'use client'
 
-import { Record } from '@/components/Record/Record';
+import { Loading } from '@/components/Loading/Loading';
+import { TableRecord } from '@/components/Record/Record';
 import { AppDispatch, RootState } from '@/store';
 import { setTransactionsAsync } from '@/store/features/transaction/TransactionSlice';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import Loading from '../loading';
 
 export default function Transaction() {
     const dispatch = useDispatch<AppDispatch>()
@@ -28,7 +28,7 @@ export default function Transaction() {
 
     return transactionState.isLoading || userState.loading ? <Loading /> : (
         <div className='flex justify-center w-2/3 min-h-screen pt-10'>
-            <Record.Root data={transactionState.transactions} hasActions className='w-full h-fit' title='Lançamentos' />
+            <TableRecord data={transactionState.transactions} hasActions className='w-full h-fit' title='Lançamentos' />
         </div>
     )
 }

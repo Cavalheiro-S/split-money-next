@@ -19,7 +19,7 @@ interface Transaction {
     id?: string,
     amount: number,
     category: string,
-    date: string,
+    date: Date,
     description: string,
     type: "income" | "outcome",
     userId?: string

@@ -1,6 +1,5 @@
-import type { AppProps } from 'next/app'
-import { NextAuthProvider } from "./NextAuthProvider"
-import { ReactReduxProvider } from "./ReactReduxProvider"
+import { NextAuthProvider } from "./NextAuthProvider";
+import { ReactReduxProvider } from "./ReactReduxProvider";
 
 interface Props {
     pageProps: any;
