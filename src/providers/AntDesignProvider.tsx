@@ -1,4 +1,4 @@
-import { ConfigProvider } from "antd"
+import { ConfigProvider } from "antd";
 
 interface Props {
     children: React.ReactNode;
@@ -8,11 +8,10 @@ export const AntDesignProvider = ({ children }: Props) => {
 
     return (
         <ConfigProvider theme={{
-            components: {
-                Select: {
-                    zIndexPopup: 10000
-                }
-            }
+            token: {
+                colorPrimary: "#00B528"
+            },
+            
         }}>
             {children}
         </ConfigProvider>

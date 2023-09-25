@@ -11,12 +11,26 @@ interface UserSignup {
     password: string,
 }
 
+interface AccessToken {
+    access_token: string,
+    expiresIn: number
+}
+
 const initialState = {
     user: {} as User,
     loading: false,
     isAuthenticated: false,
     error: ""
 };
+
+const authenticateUser = async (token: AccessToken, email: string, thunkApi: any) => {
+    Cookies.set('split.money.token', token.access_token);
+    const date = dayjs(token.expiresIn * 1000);
+    Cookies.set('split.money.expiresAt', date.toISOString());
+
+    thunkApi.dispatch(setUserIsAuthenticated(true));
+    await thunkApi.dispatch(getUserByEmail(email));
+}
 
 export const getUserByEmail = createAsyncThunk(
     'user/getUserByEmail',
@@ -50,8 +64,7 @@ export const signInAsync = createAsyncThunk(
     'user/signInAsync',
     async (action: { email: string, password: string }, thunkApi) => {
         try {
-            const response = await api.post<ApiBase<{ access_token: string, expiresIn: number }>>(
-                "/auth/login",
+            const response = await api.post<ApiBase<AccessToken>>("/auth/login",
                 { email: action.email, password: action.password })
             if (response.data.codeError === "email-password/invalid" || response.data.statusCode === 400) {
                 thunkApi.dispatch(setUserError("Email ou senha inválidas"))
@@ -60,12 +73,7 @@ export const signInAsync = createAsyncThunk(
             if (!response.data.data)
                 throw new Error()
 
-            Cookies.set('split.money.token', response.data.data.access_token);
-            const date = dayjs(response.data.data.expiresIn * 1000);
-            Cookies.set('split.money.expiresAt', date.toISOString());
-
-            thunkApi.dispatch(setUserIsAuthenticated(true));
-            await thunkApi.dispatch(getUserByEmail(action.email));
+            await authenticateUser({ ...response.data.data }, action.email, thunkApi)
             return response.data.data
         }
         catch (error) {
@@ -85,7 +93,16 @@ export const signUpUserAsync = createAsyncThunk(
                 balance: 0,
                 loginMethod: 'email'
             }
-            const response = await api.post<ApiBase<User>>('/user', user)
+            const response = await api.post<ApiBase<AccessToken>>('/auth/signup', user)
+            if (response.data.message === "User already exists" || response.data.statusCode === 400) {
+                thunkApi.dispatch(setUserError("Email já registrado"))
+                return;
+            }
+
+            if (!response.data.data)
+                throw new Error()
+
+            await authenticateUser({ ...response.data.data }, action.email, thunkApi)
             return response.data.data
         }
         catch (error) {
@@ -117,9 +134,6 @@ const userSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(signUpUserAsync.fulfilled, (state, action) => {
-                state.user = action.payload as User;
-            })
             .addCase(signOutAsync.fulfilled, (state) => {
                 state.user = {} as User;
             })

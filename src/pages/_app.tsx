@@ -19,7 +19,8 @@ const notoSans = Noto_Sans({
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
 
   return (
-    <main className={`${notoSans.variable} ${rubik.variable} text-gray-800 relative flex flex-col items-center justify-center gap-20 min-h-screen overflow-x-hidden font-sans bg-background pb-20`}>
+    <main className={`${notoSans.variable} ${rubik.variable} 
+    text-gray-800 relative grid grid-cols-[192px_1fr] grid-rows-[100px_1fr] min-h-screen overflow-x-hidden font-sans bg-background`}>
       <Providers pageProps={pageProps}>
         <Container Component={Component} pageProps={pageProps} />
       </Providers>

@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
-export default function Transaction() {
+export default function Page() {
     const dispatch = useDispatch<AppDispatch>()
     const transactionState = useSelector((state: RootState) => state.transactionState)
     const userState = useSelector((state: RootState) => state.userState)
@@ -27,7 +27,7 @@ export default function Transaction() {
     }, [userState.user.id])
 
     return transactionState.isLoading || userState.loading ? <Loading /> : (
-        <div className='flex justify-center w-2/3 min-h-screen pt-10'>
+        <div className='flex justify-center min-h-screen px-10 pt-10'>
             <TableRecord data={transactionState.transactions} hasActions className='w-full h-fit' title='Lançamentos' />
         </div>
     )

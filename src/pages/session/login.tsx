@@ -1,10 +1,9 @@
-import { Loading } from '@/components/Loading/Loading'
 import { AppDispatch, RootState } from '@/store'
 import { setUserError, signInAsync } from '@/store/features/user/UserSlice'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button, Form, Input } from 'antd'
-import { useRouter } from 'next/navigation'
-import { Suspense, useEffect } from 'react'
+import { useRouter } from 'next/router'
+import { useEffect } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { FormItem } from 'react-hook-form-antd'
 import { useDispatch, useSelector } from 'react-redux'
@@ -21,31 +20,32 @@ const schema = z.object({
   password: z.string().nonempty({ message: "Senha não pode ser vazio" })
 })
 
-export default function Login() {
+export default function Page() {
 
-  const { handleSubmit, control } = useForm<Inputs>({
+  const { handleSubmit, control, setError } = useForm<Inputs>({
     defaultValues: {
       email: "",
       password: ""
     },
     resolver: zodResolver(schema)
   })
-  const { error, isAuthenticated, loading } = useSelector((state: RootState) => state.userState)
+  const { error, loading } = useSelector((state: RootState) => state.userState)
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
 
   useEffect(() => {
-    isAuthenticated && router.push('/dashboard')
-
+    error && setError("email", { message: error })
     return () => {
       dispatch(setUserError(""))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, router])
+  }, [error])
 
   const OnSubmit: SubmitHandler<Inputs> = async data => {
     try {
-      const something = await dispatch(signInAsync({ email: data.email, password: data.password }))
+      const response = await dispatch(signInAsync({ email: data.email, password: data.password }))
+      if (response.payload)
+        router.push("/dashboard")
     }
     catch (err) {
       toast.error("Não foi possível fazer o login")
@@ -53,7 +53,7 @@ export default function Login() {
   }
 
   return (
-    <div className='flex flex-col gap-5 p-8 bg-white rounded'>
+    <div className='flex flex-col col-span-2 gap-5 p-8 m-auto bg-white rounded'>
       <div>
         <h3 className='text-2xl font-semibold'>Acesse sua conta</h3>
         <span className='text-gray-500'>Informe seus dados para acessar , ou acesse com outra forma de login</span>
@@ -75,7 +75,9 @@ export default function Login() {
           <Input.Password size='large' type='password' placeholder='********' />
         </FormItem>
         <div className='flex flex-col gap-4'>
-          <Button htmlType="submit" size='large'>Entrar</Button>
+          <Button loading={loading} htmlType="submit" size='large'>Entrar</Button>
+          <Button htmlType='button' size='large'
+            onClick={() => router.push("/session/signup")}>Criar Conta</Button>
         </div>
       </Form>
     </div>

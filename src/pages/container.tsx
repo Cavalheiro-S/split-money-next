@@ -1,7 +1,9 @@
+import { Header } from "@/components/Header"
+import { Loading } from "@/components/Loading/Loading"
 import { NavBar } from "@/components/NavBar/NavBar"
 import { RootState } from "@/store"
 import { NextComponentType, NextPageContext } from "next"
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/router"
 import { useEffect } from "react"
 import { useSelector } from "react-redux"
 import { ToastContainer } from "react-toastify"
@@ -15,14 +17,17 @@ export default function Page({ Component, pageProps: { session, ...pageProps } }
     const userState = useSelector((state: RootState) => state.userState)
     const router = useRouter()
     useEffect(() => {
-        !userState.isAuthenticated && router.replace("/session/login")
+        if (!userState.isAuthenticated && !router.asPath.includes("session/signup")) {
+            router.replace("/session/login")
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userState.isAuthenticated])
     return (
         <>
+            <Header />
             <NavBar />
             <Component {...pageProps} />
-            <ToastContainer limit={1}/>
+            <ToastContainer limit={1} />
         </>
     )
 }
