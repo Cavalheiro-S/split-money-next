@@ -14,7 +14,7 @@ interface Props {
     pageProps: any
 }
 
-export default function Page({ Component, pageProps: { session, ...pageProps } }: Props) {
+export default function Page({ Component, pageProps }: Props) {
     const userState = useSelector((state: RootState) => state.userState)
     const router = useRouter()
     useEffect(() => {

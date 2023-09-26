@@ -10,12 +10,12 @@ const rubik = Rubik({
   variable: '--font-rubik'
 })
 
-export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+export default function App({ Component, pageProps }: AppProps) {
   
   return (
     <main className={`${rubik.variable} 
     text-gray-800 relative grid grid-rows-[100px_1fr] grid-cols-[192px_1fr] min-h-screen overflow-x-hidden font-sans bg-background`}>
-      <Providers pageProps={pageProps}>
+      <Providers>
         <Container Component={Component} pageProps={pageProps} />
       </Providers>
 
