@@ -18,7 +18,7 @@ interface AccessToken {
 
 const initialState = {
     user: {} as User,
-    loading: false,
+    isLoading: false,
     isAuthenticated: false,
     error: ""
 };
@@ -141,13 +141,13 @@ const userSlice = createSlice({
                 state.user = action.payload as User;
             })
             .addMatcher(action => action.type.endsWith('fulfilled'), state => {
-                state.loading = false;
+                state.isLoading = false;
             })
             .addMatcher(action => action.type.endsWith('pending'), state => {
-                state.loading = true;
+                state.isLoading = true;
             })
             .addMatcher(action => action.type.endsWith('rejected'), (state, action) => {
-                state.loading = false;
+                state.isLoading = false;
                 if (action.payload instanceof AuthenticationError) {
                     state.user = {} as User;
                     toast.error("Seu login expirou")

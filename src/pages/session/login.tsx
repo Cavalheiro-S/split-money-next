@@ -1,3 +1,4 @@
+import { Loading } from '@/components/Loading/Loading'
 import { AppDispatch, RootState } from '@/store'
 import { setUserError, signInAsync } from '@/store/features/user/UserSlice'
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -29,7 +30,7 @@ export default function Page() {
     },
     resolver: zodResolver(schema)
   })
-  const { error, loading } = useSelector((state: RootState) => state.userState)
+  const { error, isLoading, isAuthenticated } = useSelector((state: RootState) => state.userState)
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
 
@@ -52,8 +53,8 @@ export default function Page() {
     }
   }
 
-  return (
-    <div className='flex flex-col col-span-2 gap-5 p-8 m-auto bg-white rounded'>
+  return isLoading ? <Loading /> : (
+    <div className={`flex flex-col gap-5 p-8 m-auto bg-white rounded ${isAuthenticated ? "col-start-2" : "col-start-1 col-span-2"}`}>
       <div>
         <h3 className='text-2xl font-semibold'>Acesse sua conta</h3>
         <span className='text-gray-500'>Informe seus dados para acessar , ou acesse com outra forma de login</span>
@@ -75,7 +76,7 @@ export default function Page() {
           <Input.Password size='large' type='password' placeholder='********' />
         </FormItem>
         <div className='flex flex-col gap-4'>
-          <Button loading={loading} htmlType="submit" size='large'>Entrar</Button>
+          <Button loading={isLoading} htmlType="submit" size='large'>Entrar</Button>
           <Button htmlType='button' size='large'
             onClick={() => router.push("/session/signup")}>Criar Conta</Button>
         </div>

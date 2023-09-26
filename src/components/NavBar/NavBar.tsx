@@ -40,11 +40,12 @@ export const NavBar = () => {
 
     return (
         userState.isAuthenticated
-        && <Menu
-            className='top-0 left-0 w-48 h-full border-2 border-green-500'
-            onClick={onClick}
-            selectedKeys={[current]}
-            mode="vertical"
-            items={items} />
+            ? <Menu
+                className='top-0 left-0 w-48 h-full border-2 border-green-500 col-start-1 row-span-2'
+                onClick={onClick}
+                selectedKeys={[current]}
+                mode="vertical"
+                items={items} />
+            : null
     )
 }

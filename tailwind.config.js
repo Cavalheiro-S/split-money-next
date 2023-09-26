@@ -12,8 +12,7 @@ module.exports = {
         'background': '#EEEEEE',
       },
       fontFamily: {
-        'sans': ['var(--font-noto-sans)'],
-        'heading': ['var(--font-rubik)'],
+        'sans': ['var(--font-rubik)'],
       }
     },
   },

@@ -77,7 +77,7 @@ export default function Page() {
     }
 
     return (
-        <div className='flex flex-col col-span-2 gap-5 p-8 m-auto bg-white rounded'>
+        <div className='flex flex-col col-start-2 gap-5 p-8 m-auto bg-white rounded'>
             <div>
                 <h3 className='text-2xl font-semibold'>Acesse sua conta</h3>
                 <span className='text-gray-500'>Informe seus dados para acessar , ou acesse com outra forma de login</span>

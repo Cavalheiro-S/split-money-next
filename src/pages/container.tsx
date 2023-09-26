@@ -1,4 +1,5 @@
 import { Header } from "@/components/Header"
+import { Layout } from "@/components/Layout"
 import { Loading } from "@/components/Loading/Loading"
 import { NavBar } from "@/components/NavBar/NavBar"
 import { RootState } from "@/store"

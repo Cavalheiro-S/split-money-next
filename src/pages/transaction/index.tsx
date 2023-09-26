@@ -26,7 +26,7 @@ export default function Page() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userState.user.id])
 
-    return transactionState.isLoading || userState.loading ? <Loading /> : (
+    return userState.isLoading || transactionState.isLoading ? <Loading/> : (
         <div className='flex justify-center min-h-screen px-10 pt-10'>
             <TableRecord data={transactionState.transactions} hasActions className='w-full h-fit' title='Lançamentos' />
         </div>
